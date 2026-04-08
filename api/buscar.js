@@ -19,8 +19,12 @@ module.exports = async function handler(req, res) {
     const tokenData = await tokenRes.json();
     const token = tokenData.access_token;
 
-    if (!token) {
+   if (!token) {
       return res.status(500).json({ error: 'No se pudo obtener token', detalle: tokenData });
+    }
+
+    // DEBUG TEMPORAL — borrar después
+    return res.status(200).json({ token_ok: true, token_type: tokenData.token_type, scope: tokenData.scope });
     }
 
     // Buscar en MercadoLibre con el token
