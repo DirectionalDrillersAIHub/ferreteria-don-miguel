@@ -587,20 +587,17 @@ main {
     <div class="big-icon">🛠️</div>
     <h2>Buscá cualquier producto de ferretería</h2>
     <p>Buscamos cualquier producto en Argentina y te lo entregamos donde estés. Sin filas, sin vueltas, sin hacerte perder el tiempo. Solo cobramos una pequeña comisión por el servicio.</p>
-    <p style="font-size:14px; color:#aaa; margin-bottom: 36px;">Escribí en el buscador o tocá alguna de estas categorías populares:</p>
-    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:12px; max-width:860px; margin: 0 auto 40px; text-align:left;">
-      <button class="chip-busqueda" onclick="buscarChip('taladro percutor')">🔧 Taladros</button>
-      <button class="chip-busqueda" onclick="buscarChip('martillo')">🔨 Martillos</button>
-      <button class="chip-busqueda" onclick="buscarChip('llave inglesa set')">🔩 Llaves y pinzas</button>
-      <button class="chip-busqueda" onclick="buscarChip('cable electrico')">⚡ Cables eléctricos</button>
-      <button class="chip-busqueda" onclick="buscarChip('cinta metrica')">📏 Cintas métricas</button>
-      <button class="chip-busqueda" onclick="buscarChip('cano plomeria')">🚿 Plomería</button>
-      <button class="chip-busqueda" onclick="buscarChip('pintura latex')">🎨 Pinturas</button>
-      <button class="chip-busqueda" onclick="buscarChip('tomacorriente')">🔌 Electricidad</button>
-      <button class="chip-busqueda" onclick="buscarChip('tornillo fijacion')">🪛 Tornillería</button>
-      <button class="chip-busqueda" onclick="buscarChip('sierra caladora')">🪚 Sierras</button>
-      <button class="chip-busqueda" onclick="buscarChip('candado seguridad')">🔒 Seguridad</button>
-      <button class="chip-busqueda" onclick="buscarChip('escalera aluminio')">🪜 Escaleras</button>
+    <p style="font-size:14px; color:#aaa; margin-bottom: 24px;">Filtrá por categoría o escribí en el buscador:</p>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; max-width:860px; margin: 0 auto 32px;">
+      <button class="chip-busqueda" onclick="filtrarCategoria('todas')">🏪 Todos</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Herramientas')">🔨 Herramientas</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Herramientas eléctricas')">🔧 Eléctricas</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Electricidad')">⚡ Electricidad</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Plomería')">🚿 Plomería</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Pintura')">🎨 Pintura</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Fijaciones')">🪛 Fijaciones</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Seguridad')">🔒 Seguridad</button>
+      <button class="chip-busqueda" onclick="filtrarCategoria('Construcción')">🏗️ Construcción</button>
     </div>
   </div>
 
@@ -785,116 +782,103 @@ function buscarChip(termino) {
   buscarProductos();
 }
 
+// ===== CATÁLOGO LOCAL =====
+var CATALOGO = [
+  { id:'h001', nombre:'Martillo carpintero 500g mango fibra de vidrio', categoria:'Herramientas', precioML:4800, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'h002', nombre:'Set llaves combinadas 12 piezas cromo vanadio', categoria:'Herramientas', precioML:18500, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'h003', nombre:'Destornillador punta plana y Phillips set 6 piezas', categoria:'Herramientas', precioML:6200, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'h004', nombre:'Alicate universal 8" mango aislado 1000V', categoria:'Herramientas', precioML:5400, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'h005', nombre:'Cinta métrica 5m x 19mm con freno y clip', categoria:'Herramientas', precioML:3200, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'h006', nombre:'Llave inglesa ajustable 10" acero cromo', categoria:'Herramientas', precioML:7800, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'h007', nombre:'Nivel de burbuja aluminio 60cm 3 burbujas', categoria:'Herramientas', precioML:5900, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'e001', nombre:'Taladro percutor 750W con maletín y brocas', categoria:'Herramientas eléctricas', precioML:87000, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'e002', nombre:'Amoladora angular 115mm 820W con disco', categoria:'Herramientas eléctricas', precioML:62000, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'e003', nombre:'Sierra caladora 500W con hojas incluidas', categoria:'Herramientas eléctricas', precioML:54000, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'e004', nombre:'Atornillador inalámbrico 12V con batería y cargador', categoria:'Herramientas eléctricas', precioML:43000, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'el001', nombre:'Cable duplex 2x2.5mm rollo 100m IRAM', categoria:'Electricidad', precioML:38000, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'el002', nombre:'Tomacorriente doble con toma tierra IRAM', categoria:'Electricidad', precioML:2800, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'el003', nombre:'Llave térmica bipolar 20A riel DIN', categoria:'Electricidad', precioML:8500, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'el004', nombre:'Cinta aisladora eléctrica 20m pack x5 unidades', categoria:'Electricidad', precioML:3200, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'el005', nombre:'Lámpara LED 12W E27 luz fría pack x10', categoria:'Electricidad', precioML:14000, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'el006', nombre:'Interruptor simple empotrar con placa blanco', categoria:'Electricidad', precioML:2100, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'p001', nombre:'Caño PVC 110mm x 3m desagüe', categoria:'Plomería', precioML:5800, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'p002', nombre:'Canilla monocomando lavatorio cromada', categoria:'Plomería', precioML:28000, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'p003', nombre:'Teflón cinta blanca 12mm x 10m pack x5', categoria:'Plomería', precioML:1800, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'p004', nombre:'Llave de paso esfera 1/2" cromada', categoria:'Plomería', precioML:4200, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'p005', nombre:'Flexible acero inoxidable 1/2" x 40cm', categoria:'Plomería', precioML:2600, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'pi001', nombre:'Látex interior blanco mate 4L Sherwin Williams', categoria:'Pintura', precioML:24000, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'pi002', nombre:'Rodillo lana 23cm con mango telescópico', categoria:'Pintura', precioML:5400, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'pi003', nombre:'Pintura esmalte sintético blanco 1L', categoria:'Pintura', precioML:8200, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'pi004', nombre:'Pincel plano 2" cerda natural para látex', categoria:'Pintura', precioML:1800, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'f001', nombre:'Tornillos para drywall 3.5x25mm caja x500', categoria:'Fijaciones', precioML:3800, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'f002', nombre:'Tarugo plástico Fischer 6mm caja x100', categoria:'Fijaciones', precioML:2200, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'f003', nombre:'Adhesivo sellador siliconado transparente 280ml', categoria:'Fijaciones', precioML:4100, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'f004', nombre:'Disco de corte metal 115mm pack x4', categoria:'Fijaciones', precioML:3600, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+  { id:'s001', nombre:'Candado seguridad 60mm arco acero templado', categoria:'Seguridad', precioML:9800, imagen:'https://http2.mlstatic.com/D_NQ_NP_651504-MLA71456595457_092023-O.webp' },
+  { id:'s002', nombre:'Cerradura doble paleta para puerta exterior', categoria:'Seguridad', precioML:18500, imagen:'https://http2.mlstatic.com/D_NQ_NP_773512-MLA71623495848_092023-O.webp' },
+  { id:'c001', nombre:'Escalera aluminio tijera 6 peldaños 150kg', categoria:'Construcción', precioML:48000, imagen:'https://http2.mlstatic.com/D_NQ_NP_627293-MLA71537272596_092023-O.webp' },
+  { id:'c002', nombre:'Cinta de papel para juntas drywall 50m', categoria:'Construcción', precioML:2400, imagen:'https://http2.mlstatic.com/D_NQ_NP_911796-MLA72088263186_102023-O.webp' },
+  { id:'c003', nombre:'Espátula acero inoxidable 15cm mango madera', categoria:'Construcción', precioML:3100, imagen:'https://http2.mlstatic.com/D_NQ_NP_870614-MLA72032474397_102023-O.webp' },
+];
+
+var categoriaActual = 'todas';
+
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') buscarProductos();
 });
 
-async function buscarProductos() {
-  const query = document.getElementById('searchInput').value.trim();
-  if (!query) return;
+// Mostrar catálogo completo al cargar
+window.addEventListener('load', function() {
+  filtrarCategoria('todas');
+});
 
-  document.getElementById('estadoInicial').style.display = 'none';
-  document.getElementById('resultados').style.display = 'none';
-  document.getElementById('loading').style.display = 'block';
-
-  try {
-    const res = await fetch(
-      'https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(query) + '&limit=12',
-      { headers: { 'Authorization': 'Bearer ' + CONFIG.ML_TOKEN } }
-    );
-    const datos = await res.json();
-    document.getElementById('loading').style.display = 'none';
-
-    if (!datos.results || datos.results.length === 0) {
-      mostrarSinResultados(query);
-      return;
-    }
-    mostrarResultados(query, datos.results);
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById('loading').style.display = 'none';
-    mostrarProductosDemo(query);
-  }
+function buscarChip(termino) {
+  document.getElementById('searchInput').value = termino;
+  buscarProductos();
 }
 
-function mostrarResultados(query, items) {
-  document.getElementById('resultadosTitulo').textContent = 'Resultados para "' + query + '"';
-  document.getElementById('resultadosSub').textContent = items.length + ' productos encontrados · Precio incluye gestión y entrega a domicilio';
+function filtrarCategoria(cat) {
+  categoriaActual = cat;
+  document.getElementById('searchInput').value = '';
+  var productos = cat === 'todas' ? CATALOGO : CATALOGO.filter(function(p) { return p.categoria === cat; });
+  mostrarCatalogo(productos, cat === 'todas' ? 'Todos los productos' : cat, productos.length + ' productos disponibles');
+}
 
-  const grid = document.getElementById('productosGrid');
-  grid.innerHTML = '';
+function buscarProductos() {
+  var query = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!query) { filtrarCategoria('todas'); return; }
 
-  items.forEach(function(item) {
-    const precioML = item.price;
-    const precioFinal = Math.round(precioML * (1 + CONFIG.COMISION));
-
-    const card = document.createElement('div');
-    card.className = 'prod-card';
-
-    const prodData = JSON.stringify({
-      id: item.id,
-      nombre: item.title,
-      img: item.thumbnail,
-      precioML: precioML,
-      precioFinal: precioFinal,
-      link: item.permalink
-    }).replace(/'/g, "&#39;");
-
-    card.innerHTML =
-      '<div class="prod-img-wrap">' +
-        '<img src="' + item.thumbnail + '" alt="' + item.title + '" loading="lazy">' +
-      '</div>' +
-      '<div class="prod-body">' +
-        '<div class="prod-nombre">' + item.title + '</div>' +
-        '<div class="precio-wrap">' +
-          '<div class="precio-final">$' + precioFinal.toLocaleString('es-AR') + '</div>' +
-          '<div class="precio-comision">🏠 Incluye gestión y entrega a domicilio</div>' +
-        '</div>' +
-        '<button class="btn-agregar" onclick=\'agregarAlCarrito(' + prodData + ', this)\'>🛒 Agregar al carrito</button>' +
-      '</div>';
-
-    grid.appendChild(card);
+  var resultados = CATALOGO.filter(function(p) {
+    return p.nombre.toLowerCase().includes(query) || p.categoria.toLowerCase().includes(query);
   });
 
-  document.getElementById('resultados').style.display = 'block';
+  mostrarCatalogo(resultados, 'Resultados para "' + query + '"',
+    resultados.length > 0 ? resultados.length + ' productos encontrados' : 'Sin resultados — consultanos por WhatsApp');
 }
 
-function mostrarSinResultados(query) {
-  document.getElementById('resultadosTitulo').textContent = 'Sin resultados para "' + query + '"';
-  document.getElementById('resultadosSub').textContent = 'Podés enviarnos el link o consultarnos por WhatsApp';
-  document.getElementById('productosGrid').innerHTML = '';
-  document.getElementById('resultados').style.display = 'block';
-}
+function mostrarCatalogo(productos, titulo, subtitulo) {
+  document.getElementById('estadoInicial').style.display = productos.length > 0 || titulo !== 'todos' ? 'block' : 'block';
+  document.getElementById('resultadosTitulo').textContent = titulo;
+  document.getElementById('resultadosSub').textContent = subtitulo;
 
-function mostrarProductosDemo(query) {
-  const demos = [
-    { id: 'd1', nombre: 'Taladro percutor 750W con maletín', img: '🔧', precioML: 85000, link: '#' },
-    { id: 'd2', nombre: 'Juego de llaves combinadas 12 piezas', img: '🔩', precioML: 18000, link: '#' },
-    { id: 'd3', nombre: 'Cable duplex 2x2.5mm rollo 100m', img: '💡', precioML: 36000, link: '#' },
-    { id: 'd4', nombre: 'Martillo carpintero 500g mango fibra', img: '🔨', precioML: 4500, link: '#' },
-    { id: 'd5', nombre: 'Cinta métrica 5m con freno', img: '📏', precioML: 3200, link: '#' },
-    { id: 'd6', nombre: 'Pinza amperímetro digital', img: '⚡', precioML: 22000, link: '#' },
-  ];
-
-  document.getElementById('resultadosTitulo').textContent = 'Resultados para "' + query + '"';
-  document.getElementById('resultadosSub').textContent = 'Mostrando productos de ejemplo';
-
-  const grid = document.getElementById('productosGrid');
+  var grid = document.getElementById('productosGrid');
   grid.innerHTML = '';
 
-  demos.forEach(function(item) {
-    const precioFinal = Math.round(item.precioML * (1 + CONFIG.COMISION));
-    const prodData = JSON.stringify({
-      id: item.id, nombre: item.nombre, img: item.img,
-      precioML: item.precioML, precioFinal: precioFinal, link: item.link
+  productos.forEach(function(item) {
+    var precioFinal = Math.round(item.precioML * (1 + CONFIG.COMISION));
+    var prodData = JSON.stringify({
+      id: item.id, nombre: item.nombre, img: item.imagen,
+      precioML: item.precioML, precioFinal: precioFinal, link: '#'
     }).replace(/'/g, "&#39;");
 
-    const card = document.createElement('div');
+    var card = document.createElement('div');
     card.className = 'prod-card';
     card.innerHTML =
-      '<div class="prod-img-wrap" style="font-size:64px;">' + item.img + '</div>' +
+      '<div class="prod-img-wrap">' +
+        '<img src="' + item.imagen + '" alt="' + item.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentNode.innerHTML+=\'<span style=font-size:52px>🔧</span>\'">' +
+      '</div>' +
       '<div class="prod-body">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--naranja);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">' + item.categoria + '</div>' +
         '<div class="prod-nombre">' + item.nombre + '</div>' +
         '<div class="precio-wrap">' +
           '<div class="precio-final">$' + precioFinal.toLocaleString('es-AR') + '</div>' +
@@ -906,6 +890,9 @@ function mostrarProductosDemo(query) {
   });
 
   document.getElementById('resultados').style.display = 'block';
+  // Mantener chips visibles arriba
+  document.getElementById('estadoInicial').style.paddingBottom = '0';
+  document.getElementById('estadoInicial').style.paddingTop = '24px';
 }
 
 // ===== CARRITO =====
