@@ -3,18 +3,9 @@ module.exports = async function handler(req, res) {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Falta busqueda' });
   try {
-    const tr = await fetch('https://api.mercadolibre.com/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'grant_type=client_credentials&client_id=3657697217255500&client_secret=uKKiMkiy4EotNDuITH5RKCysOfUrT0MK'
-    });
-    const td = await tr.json();
-    const token = td.access_token;
-    const sr = await fetch('https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const sr = await fetch('https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12&access_token=APP_USR-3657697217255500-040813-747ab14be1ebd00e768057190c781ff6-95829937');
     const datos = await sr.json();
-    if (!datos.results || datos.results.length === 0) return res.status(200).json({ productos: [] });
+    if (!datos.results || datos.results.length === 0) return res.status(200).json({ productos: [], debug: datos });
     const productos = datos.results.map(function(item) {
       return {
         id: item.id,
