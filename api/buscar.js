@@ -6,11 +6,20 @@ module.exports = async function handler(req, res) {
 
   try {
     const url = `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=12`;
-    const respuesta = await fetch(url);
-    const datos = await respuesta.json();
+    
+    const respuesta = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'es-AR,es;q=0.9',
+      }
+    });
 
-    if (!datos || !datos.results) {
-      return res.status(200).json({ productos: [] });
+    const texto = await respuesta.text();
+    const datos = JSON.parse(texto);
+
+    if (!datos || !datos.results || datos.results.length === 0) {
+      return res.status(200).json({ productos: [], debug: datos });
     }
 
     const productos = datos.results.map(item => ({
