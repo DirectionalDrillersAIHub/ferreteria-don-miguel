@@ -5,21 +5,34 @@ module.exports = async function handler(req, res) {
   if (!q) return res.status(400).json({ error: 'Falta búsqueda' });
 
   try {
-    const url = `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=12`;
-    
-    const respuesta = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'es-AR,es;q=0.9',
-      }
+    // Obtener access token con credenciales de la app
+    const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: '3657697217255500',
+        client_secret: 'uKKiMkiy4EotNDuITH5RKCysOfUrT0MK'
+      })
     });
 
-    const texto = await respuesta.text();
-    const datos = JSON.parse(texto);
+    const tokenData = await tokenRes.json();
+    const token = tokenData.access_token;
 
-    if (!datos || !datos.results || datos.results.length === 0) {
-      return res.status(200).json({ productos: [], debug: datos });
+    if (!token) {
+      return res.status(500).json({ error: 'No se pudo obtener token', detalle: tokenData });
+    }
+
+    // Buscar en MercadoLibre con el token
+    const searchRes = await fetch(
+      `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=12`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+
+    const datos = await searchRes.json();
+
+    if (!datos.results || datos.results.length === 0) {
+      return res.status(200).json({ productos: [] });
     }
 
     const productos = datos.results.map(item => ({
@@ -32,6 +45,7 @@ module.exports = async function handler(req, res) {
     }));
 
     return res.status(200).json({ productos });
+
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
