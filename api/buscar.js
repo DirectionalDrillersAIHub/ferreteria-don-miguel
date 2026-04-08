@@ -5,16 +5,16 @@ module.exports = async function handler(req, res) {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Falta busqueda' });
 
-  const url = 'https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12';
-  
+  const token = 'APP_USR-3657697217255500-040814-3b39b29f2885080e21209f355c15690c-95829937';
+
   return new Promise((resolve) => {
     const options = {
       hostname: 'api.mercadolibre.com',
       path: '/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12',
       method: 'GET',
       headers: {
-        'User-Agent': 'curl/7.68.0',
-        'Accept': '*/*'
+        'Authorization': 'Bearer ' + token,
+        'User-Agent': 'curl/7.68.0'
       }
     };
 
@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
           res.status(200).json({ productos: productos });
           resolve();
         } catch(e) {
-          res.status(500).json({ error: e.message, raw: data.substring(0, 200) });
+          res.status(500).json({ error: e.message, raw: data.substring(0, 300) });
           resolve();
         }
       });
