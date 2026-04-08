@@ -1,23 +1,55 @@
+const https = require('https');
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Falta busqueda' });
-  try {
-    const sr = await fetch('https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12&access_token=APP_USR-3657697217255500-040813-747ab14be1ebd00e768057190c781ff6-95829937');
-    const datos = await sr.json();
-    if (!datos.results || datos.results.length === 0) return res.status(200).json({ productos: [], debug: datos });
-    const productos = datos.results.map(function(item) {
-      return {
-        id: item.id,
-        nombre: item.title,
-        precio: item.price,
-        imagen: (item.thumbnail || '').replace('http://', 'https://'),
-        link: item.permalink,
-        envio_gratis: item.shipping ? item.shipping.free_shipping : false
-      };
+
+  const url = 'https://api.mercadolibre.com/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12';
+  
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'api.mercadolibre.com',
+      path: '/sites/MLA/search?q=' + encodeURIComponent(q) + '&limit=12',
+      method: 'GET',
+      headers: {
+        'User-Agent': 'curl/7.68.0',
+        'Accept': '*/*'
+      }
+    };
+
+    const request = https.get(options, (response) => {
+      let data = '';
+      response.on('data', chunk => data += chunk);
+      response.on('end', () => {
+        try {
+          const datos = JSON.parse(data);
+          if (!datos.results || datos.results.length === 0) {
+            res.status(200).json({ productos: [], debug: datos });
+            resolve();
+            return;
+          }
+          const productos = datos.results.map(function(item) {
+            return {
+              id: item.id,
+              nombre: item.title,
+              precio: item.price,
+              imagen: (item.thumbnail || '').replace('http://', 'https://'),
+              link: item.permalink,
+              envio_gratis: item.shipping ? item.shipping.free_shipping : false
+            };
+          });
+          res.status(200).json({ productos: productos });
+          resolve();
+        } catch(e) {
+          res.status(500).json({ error: e.message, raw: data.substring(0, 200) });
+          resolve();
+        }
+      });
     });
-    return res.status(200).json({ productos: productos });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
+    request.on('error', (e) => {
+      res.status(500).json({ error: e.message });
+      resolve();
+    });
+  });
 };
