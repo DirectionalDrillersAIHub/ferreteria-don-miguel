@@ -9,11 +9,15 @@ module.exports = async function handler(req, res) {
     const respuesta = await fetch(url);
     const datos = await respuesta.json();
 
+    if (!datos || !datos.results) {
+      return res.status(200).json({ productos: [] });
+    }
+
     const productos = datos.results.map(item => ({
       id: item.id,
       nombre: item.title,
       precio: item.price,
-      imagen: item.thumbnail.replace('http://', 'https://'),
+      imagen: (item.thumbnail || '').replace('http://', 'https://'),
       link: item.permalink,
       envio_gratis: item.shipping?.free_shipping || false,
     }));
