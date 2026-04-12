@@ -42,6 +42,88 @@ body {
   z-index: 0;
 }
 
+/* ===== BUSCADOR HERO ===== */
+.hero-search-wrap {
+  margin: 0 auto 40px;
+  max-width: 640px;
+  animation: fadeUp 0.8s 0.45s ease both;
+}
+
+.hero-search {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255,69,0,0.5);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 30px rgba(255,69,0,0.15);
+}
+
+.hero-search:focus-within {
+  border-color: var(--org);
+  box-shadow: 0 0 50px rgba(255,69,0,0.3);
+}
+
+.hero-search-icon {
+  padding: 0 16px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.hero-search input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 18px 8px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  outline: none;
+}
+
+.hero-search input::placeholder { color: rgba(255,255,255,0.4); }
+
+.hero-search button {
+  background: linear-gradient(135deg, var(--org), var(--org2));
+  border: none;
+  color: white;
+  padding: 0 28px;
+  height: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.hero-search button:hover { opacity: 0.88; }
+
+.hero-search-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.hero-search-tags span {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.65);
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hero-search-tags span:hover {
+  background: rgba(255,69,0,0.15);
+  border-color: rgba(255,69,0,0.4);
+  color: var(--org2);
+}
+
 /* ===== NAV ===== */
 nav {
   position: fixed;
@@ -818,6 +900,9 @@ footer a { color: var(--org2); text-decoration: none; }
 @media(max-width:768px){
   nav{padding:0 16px;}
   .nav-search{display:none;}
+  .hero-search input { font-size: 14px; padding: 15px 8px; }
+  .hero-search button { padding: 0 18px; font-size: 13px; }
+  .hero-search-wrap { max-width: 100%; }
   .hero h1{font-size:clamp(56px,14vw,80px);}
   .hero-float{display:none;}
   .steps-3d,.manual-steps{grid-template-columns:1fr;}
@@ -869,6 +954,24 @@ footer a { color: var(--org2); text-decoration: none; }
       <span class="line1">A TU PUERTA.</span>
     </h1>
     <p class="hero-sub">Buscamos y entregamos cualquier producto de ferretería en Argentina. Sin filas, sin vueltas. Solo una pequeña comisión por el servicio.</p>
+
+    <!-- BUSCADOR HERO -->
+    <div class="hero-search-wrap">
+      <div class="hero-search">
+        <span class="hero-search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="¿Qué producto necesitás? Ej: taladro, cable, pintura..." autocomplete="off">
+        <button onclick="buscar()">Buscar</button>
+      </div>
+      <div class="hero-search-tags">
+        <span onclick="buscarHero('taladro')">Taladros</span>
+        <span onclick="buscarHero('martillo')">Martillos</span>
+        <span onclick="buscarHero('cable eléctrico')">Cables</span>
+        <span onclick="buscarHero('pintura látex')">Pinturas</span>
+        <span onclick="buscarHero('caño plomería')">Plomería</span>
+        <span onclick="buscarHero('candado')">Seguridad</span>
+      </div>
+    </div>
+
     <div class="hero-btns">
       <a href="#catalogo" class="btn-glow">🛠️ Ver catálogo</a>
       <a href="https://wa.me/5492995162152" class="btn-glass" target="_blank">💬 Contactar ahora</a>
@@ -1206,6 +1309,12 @@ function filtrar(cat,btn){
   if(btn)btn.classList.add('activo');
   document.getElementById('searchInput').value='';
   renderCat(cat==='todas'?PRODS:PRODS.filter(function(p){return p.c===cat;}),cat==='todas');
+}
+
+function buscarHero(termino){
+  document.getElementById('searchInput').value=termino;
+  buscar();
+  document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});
 }
 
 function buscar(){
