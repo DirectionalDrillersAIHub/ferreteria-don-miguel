@@ -30,31 +30,8 @@ body {
   background: var(--dark);
   color: var(--text);
   overflow-x: hidden;
-  cursor: none;
 }
 
-/* ===== CURSOR PERSONALIZADO ===== */
-.cursor {
-  width: 12px; height: 12px;
-  background: var(--org);
-  border-radius: 50%;
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  transition: transform 0.15s, width 0.2s, height 0.2s;
-  mix-blend-mode: difference;
-}
-.cursor-ring {
-  width: 40px; height: 40px;
-  border: 1.5px solid rgba(255,69,0,0.5);
-  border-radius: 50%;
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none;
-  z-index: 9998;
-  transition: transform 0.4s cubic-bezier(.17,.67,.83,.67), width 0.3s, height 0.3s;
-}
 
 /* ===== CANVAS PARTÍCULAS ===== */
 #canvas {
@@ -508,7 +485,18 @@ nav {
   background: linear-gradient(135deg, var(--dark3), var(--dark2));
   font-size: 60px;
   position: relative;
+  overflow: hidden;
 }
+
+.prod-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.prod-card:hover .prod-img img { transform: scale(1.06); }
 
 .prod-img::before {
   content: '';
@@ -871,8 +859,6 @@ footer a { color: var(--org2); text-decoration: none; }
 </head>
 <body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
 <canvas id="canvas"></canvas>
 <div class="toast" id="toast"></div>
 
@@ -1084,22 +1070,6 @@ footer a { color: var(--org2); text-decoration: none; }
 <a href="https://wa.me/5492995162152" class="wsp-float" target="_blank">💬</a>
 
 <script>
-/* ===== CURSOR ===== */
-var cursor=document.getElementById('cursor');
-var ring=document.getElementById('cursorRing');
-var mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',function(e){
-  mx=e.clientX;my=e.clientY;
-  cursor.style.transform='translate('+(mx-6)+'px,'+(my-6)+'px)';
-});
-function animRing(){
-  rx+=(mx-rx-20)*0.12;
-  ry+=(my-ry-20)*0.12;
-  ring.style.transform='translate('+rx+'px,'+ry+'px)';
-  requestAnimationFrame(animRing);
-}
-animRing();
-
 /* ===== PARTÍCULAS ===== */
 var canvas=document.getElementById('canvas');
 var ctx=canvas.getContext('2d');
@@ -1203,12 +1173,22 @@ function mkCard(item){
   var icon=IMAP[item.c]||'🔧';
   var pd=JSON.stringify({id:item.id,n:item.n,img:item.img||icon,pML:item.p,pF:pf}).replace(/'/g,"&#39;");
   var imgHtml=item.img
-    ? '<img src="'+item.img+'" alt="'+item.n+'" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onerror="this.style.display=\'none\';this.parentNode.innerHTML+=\'<span style=font-size:56px>'+icon+'</span>\'">'
-    : '<span style="font-size:56px">'+icon+'</span>';
-  var card=document.createElement('div');card.className='prod-card';
-  card.innerHTML='<div class="prod-img" style="overflow:hidden;padding:0;">'+imgHtml+'</div><div class="prod-body"><div class="prod-cat-tag">'+item.c+'</div><div class="prod-nombre">'+item.n+'</div><div class="prod-desc">'+(item.d||'')+'</div><div class="prod-price-row"><div class="prod-price">$'+pf.toLocaleString('es-AR')+'</div><div class="prod-envio-tag">🏠 Incluido</div></div><button class="btn-add" onclick=\'addCart('+pd+',this)\'><span>🛒 Agregar al carrito</span></button></div>';
-  card.querySelector('.prod-img img')&&card.querySelector('.prod-img').addEventListener('mouseenter',function(){var img=this.querySelector('img');if(img)img.style.transform='scale(1.06)';});
-  card.querySelector('.prod-img img')&&card.querySelector('.prod-img').addEventListener('mouseleave',function(){var img=this.querySelector('img');if(img)img.style.transform='scale(1)';});
+    ? '<img src="'+item.img+'" alt="'+item.n+'" loading="lazy">'
+    : icon;
+  var card=document.createElement('div');
+  card.className='prod-card';
+  card.innerHTML=
+    '<div class="prod-img">'+imgHtml+'</div>'+
+    '<div class="prod-body">'+
+      '<div class="prod-cat-tag">'+item.c+'</div>'+
+      '<div class="prod-nombre">'+item.n+'</div>'+
+      '<div class="prod-desc">'+(item.d||'')+'</div>'+
+      '<div class="prod-price-row">'+
+        '<div class="prod-price">$'+pf.toLocaleString('es-AR')+'</div>'+
+        '<div class="prod-envio-tag">🏠 Incluido</div>'+
+      '</div>'+
+      '<button class="btn-add" onclick=\'addCart('+pd+',this)\'><span>🛒 Agregar al carrito</span></button>'+
+    '</div>';
   return card;
 }
 
