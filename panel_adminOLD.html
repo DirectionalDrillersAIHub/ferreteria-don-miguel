@@ -401,48 +401,6 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
           </select>
         </div>
       </div>
-
-      <!-- LOGÍSTICA -->
-      <div style="margin-top:20px;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">📦 Logística de envío</div>
-        <div class="form-grid">
-          <div class="fg">
-            <label>Peso estimado (kg)</label>
-            <input type="number" id="mPeso" placeholder="Ej: 2.5" min="0" step="0.1" oninput="calcEnvioModal()">
-            <span class="fg-hint">ML Envíos acepta hasta 30kg</span>
-          </div>
-          <div class="fg">
-            <label>Dimensión mayor (cm)</label>
-            <input type="number" id="mDim" placeholder="Ej: 45" min="0" step="1" oninput="calcEnvioModal()">
-            <span class="fg-hint">ML Envíos acepta hasta 70cm</span>
-          </div>
-          <div class="fg full">
-            <label>Tipo de envío detectado</label>
-            <div id="mEnvioDetectado" style="padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;background:var(--bg3);border:1px solid var(--border);color:var(--muted);">
-              Completá peso y dimensión para detectar automáticamente
-            </div>
-          </div>
-          <div class="fg full">
-            <label>Tipo de envío (override manual)</label>
-            <select id="mTipoEnvio">
-              <option value="auto">🤖 Automático según peso/dimensión</option>
-              <option value="ml">📦 ML Envíos (fijo)</option>
-              <option value="flete">🚚 Requiere cotización de flete</option>
-              <option value="retiro">🏪 Solo retiro en local</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Costo de envío ML ($)</label>
-            <input type="number" id="mCostoEnvio" placeholder="0" min="0" step="100">
-            <span class="fg-hint">Dejá 0 para calcular al momento del pedido</span>
-          </div>
-          <div class="fg">
-            <label>Costo flete estimado ($)</label>
-            <input type="number" id="mCostoFlete" placeholder="0" min="0" step="100">
-            <span class="fg-hint">Referencia para productos con cotización</span>
-          </div>
-        </div>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
@@ -476,10 +434,6 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
       <span class="nav-section-label" style="margin-top:8px;">Precios</span>
       <button class="nav-item" onclick="showSection('precios')">
         <span class="ni">💰</span> Actualizar precios
-      </button>
-      <span class="nav-section-label" style="margin-top:8px;">Logística</span>
-      <button class="nav-item" onclick="showSection('pedidos')">
-        <span class="ni">🚚</span> Pedidos / Cotizaciones
       </button>
       <span class="nav-section-label" style="margin-top:8px;">Configuración</span>
       <button class="nav-item" onclick="showSection('config')">
@@ -524,7 +478,6 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
       <button class="tab active" id="tab-productos" onclick="showSection('productos')">📦 Productos <span class="tab-badge" id="tabCount">0</span></button>
       <button class="tab" id="tab-agregar" onclick="showSection('agregar')">➕ Agregar</button>
       <button class="tab" id="tab-excel" onclick="showSection('excel')">📊 Excel</button>
-      <button class="tab" id="tab-pedidos" onclick="showSection('pedidos')">🚚 Pedidos <span class="tab-badge" id="pedidosBadge" style="background:rgba(232,184,75,0.15);color:var(--gold);display:none;">0</span></button>
       <button class="tab" id="tab-precios" onclick="showSection('precios')">💰 Precios</button>
       <button class="tab" id="tab-config" onclick="showSection('config')">⚙️ Config</button>
       <button class="tab" id="tab-exportar" onclick="showSection('exportar')">⬇️ Exportar</button>
@@ -570,7 +523,6 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
                     <th>Precio + comisión</th>
                     <th>Stock</th>
                     <th>Unidad</th>
-                    <th>Envío</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -651,47 +603,7 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
                 </select>
               </div>
             </div>
-
-            <!-- LOGÍSTICA -->
-            <div style="margin-top:4px;padding:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">📦 Logística de envío</div>
-              <div class="form-grid-3">
-                <div class="fg">
-                  <label>Peso estimado (kg)</label>
-                  <input type="number" id="aPeso" placeholder="Ej: 2.5" min="0" step="0.1" oninput="calcEnvioAgregar()">
-                  <span class="fg-hint">ML acepta hasta 30kg</span>
-                </div>
-                <div class="fg">
-                  <label>Dimensión mayor (cm)</label>
-                  <input type="number" id="aDim" placeholder="Ej: 45" min="0" step="1" oninput="calcEnvioAgregar()">
-                  <span class="fg-hint">ML acepta hasta 70cm</span>
-                </div>
-                <div class="fg">
-                  <label>Tipo de envío</label>
-                  <select id="aTipoEnvio">
-                    <option value="auto">🤖 Automático</option>
-                    <option value="ml">📦 ML Envíos</option>
-                    <option value="flete">🚚 Cotizar flete</option>
-                    <option value="retiro">🏪 Solo retiro</option>
-                  </select>
-                </div>
-              </div>
-              <div id="aEnvioDetectado" style="margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;background:var(--bg3);border:1px solid var(--border);color:var(--muted);">
-                Completá peso y dimensión para detectar el tipo de envío automáticamente
-              </div>
-              <div class="form-grid" style="margin-top:12px;">
-                <div class="fg">
-                  <label>Costo envío ML estimado ($)</label>
-                  <input type="number" id="aCostoEnvio" placeholder="0" min="0" step="100">
-                  <span class="fg-hint">Dejá 0 para calcular al momento del pedido</span>
-                </div>
-                <div class="fg">
-                  <label>Costo flete estimado ($)</label>
-                  <input type="number" id="aCostoFlete" placeholder="0" min="0" step="100">
-                  <span class="fg-hint">Solo para productos que requieren cotización</span>
-                </div>
-              </div>
-            </div>
+            <div style="display:flex;gap:10px;">
               <button class="btn btn-primary btn-lg" onclick="agregarProducto()">✅ Agregar al catálogo</button>
               <button class="btn btn-secondary" onclick="limpiarFormAgregar()">Limpiar</button>
             </div>
@@ -900,122 +812,6 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
         </div>
       </div>
 
-      <!-- ===== SECCIÓN: PEDIDOS / COTIZACIONES ===== -->
-      <div class="section" id="sec-pedidos">
-
-        <!-- Resumen -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-body" style="padding:20px;text-align:center;">
-              <div style="font-size:28px;font-weight:700;color:var(--gold);" id="statPendientes">0</div>
-              <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;">Pendientes de cotización</div>
-            </div>
-          </div>
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-body" style="padding:20px;text-align:center;">
-              <div style="font-size:28px;font-weight:700;color:var(--verde);" id="statConfirmados">0</div>
-              <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;">Confirmados</div>
-            </div>
-          </div>
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-body" style="padding:20px;text-align:center;">
-              <div style="font-size:28px;font-weight:700;color:var(--naranja);" id="statEntregados">0</div>
-              <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;">Entregados</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Formulario: cargar pedido manual -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">➕ Registrar pedido / solicitud de cotización</div>
-              <div class="card-sub">Cuando un cliente hace un pedido que requiere cotización de flete, registralo acá</div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="form-grid" style="margin-bottom:16px;">
-              <div class="fg">
-                <label>Nombre del cliente *</label>
-                <input type="text" id="pNombre" placeholder="Juan Pérez">
-              </div>
-              <div class="fg">
-                <label>WhatsApp del cliente *</label>
-                <input type="text" id="pWsp" placeholder="5492994000000">
-              </div>
-              <div class="fg full">
-                <label>Producto(s) solicitado(s) *</label>
-                <input type="text" id="pProducto" placeholder="Ej: Escalera aluminio 6 peldaños x1, Cable PVC 100m x2">
-              </div>
-              <div class="fg">
-                <label>Dirección de entrega</label>
-                <input type="text" id="pDireccion" placeholder="Av. San Martín 1245, Cipolletti">
-              </div>
-              <div class="fg">
-                <label>Ciudad / Provincia</label>
-                <input type="text" id="pCiudad" placeholder="Cipolletti, Neuquén">
-              </div>
-              <div class="fg">
-                <label>Precio del producto ($)</label>
-                <input type="number" id="pPrecioProducto" placeholder="0" min="0" step="100">
-              </div>
-              <div class="fg">
-                <label>Tipo de envío necesario</label>
-                <select id="pTipoFlete">
-                  <option value="ml">📦 ML Envíos</option>
-                  <option value="andreani">🚚 Andreani</option>
-                  <option value="oca">🚚 OCA</option>
-                  <option value="camioneta">🚐 Camioneta / flete local</option>
-                  <option value="camion">🚛 Camión</option>
-                  <option value="a_confirmar">❓ A confirmar</option>
-                </select>
-              </div>
-              <div class="fg">
-                <label>Costo de flete cotizado ($)</label>
-                <input type="number" id="pCostoFlete" placeholder="0" min="0" step="100">
-                <span class="fg-hint">Dejá en 0 si todavía no cotizaste</span>
-              </div>
-              <div class="fg full">
-                <label>Observaciones</label>
-                <input type="text" id="pObs" placeholder="Notas sobre el pedido, condiciones especiales, etc.">
-              </div>
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="registrarPedido()">✅ Registrar pedido</button>
-              <button class="btn btn-secondary" onclick="limpiarFormPedido()">Limpiar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lista de pedidos -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📋 Historial de pedidos</div>
-            <div style="display:flex;gap:8px;">
-              <select class="filtro-select" id="filtroPedidos" onchange="renderPedidos()">
-                <option value="">Todos</option>
-                <option value="pendiente">⏳ Pendientes</option>
-                <option value="cotizado">💰 Cotizados</option>
-                <option value="confirmado">✅ Confirmados</option>
-                <option value="entregado">🏠 Entregados</option>
-                <option value="cancelado">❌ Cancelados</option>
-              </select>
-              <button class="btn btn-danger btn-sm" onclick="limpiarPedidos()">🗑 Limpiar historial</button>
-            </div>
-          </div>
-          <div class="card-body" style="padding:0;">
-            <div id="pedidosList" style="padding:16px;">
-              <div class="empty-state">
-                <div class="es-icon">🚚</div>
-                <h3>Sin pedidos registrados</h3>
-                <p>Los pedidos que requieran cotización de flete aparecerán acá para que puedas gestionarlos.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
       <!-- ===== SECCIÓN: EXPORTAR ===== -->
       <div class="section" id="sec-exportar">
         <div class="card">
@@ -1105,7 +901,6 @@ function showSection(id){
     productos: ['Productos','Gestioná el inventario completo'],
     agregar: ['Agregar producto','Completá los datos para agregar al catálogo'],
     excel: ['Importar Excel','Cargá todo el inventario de una vez'],
-    pedidos: ['Pedidos y Cotizaciones','Gestioná solicitudes de flete y confirmación de envíos'],
     precios: ['Actualizar precios','Aumentos por inflación, impuestos o descuentos'],
     config: ['Configuración','Datos del negocio y configuración del servicio'],
     exportar: ['Exportar','Descargá el inventario o generá el código para la tienda'],
@@ -1118,7 +913,6 @@ function showSection(id){
   if(id === 'productos') renderTabla();
   if(id === 'precios') renderHistorial();
   if(id === 'config') cargarFormConfig();
-  if(id === 'pedidos') renderPedidos();
 }
 
 /* ===== TABLA DE PRODUCTOS ===== */
@@ -1154,7 +948,6 @@ function renderTabla(){
         '<td style="color:var(--verde);font-weight:700;">$'+pFinal.toLocaleString('es-AR')+'<span style="font-size:10px;color:var(--muted);font-weight:400;"> (+'+com+'%)</span></td>'+
         '<td><span class="tag '+(p.stock?'tag-stock':'tag-sin')+'">'+(p.stock?'Disponible':'Sin stock')+'</span></td>'+
         '<td style="font-size:12px;color:var(--muted);">'+(p.unidad||'unidad')+'</td>'+
-        '<td>'+renderEnvioTag(p)+'</td>'+
         '<td><div class="td-acciones">'+
           '<button class="btn btn-secondary btn-sm" onclick="editarProducto('+idx+')">✏️</button>'+
           '<button class="btn btn-danger btn-sm" onclick="eliminarProducto('+idx+')">🗑</button>'+
@@ -1177,47 +970,6 @@ function actualizarStats(){
 }
 
 /* ===== AGREGAR PRODUCTO ===== */
-/* ===== LOGÍSTICA ===== */
-var ML_PESO_MAX = 30;
-var ML_DIM_MAX  = 70;
-
-function detectarTipoEnvio(p){
-  if(p.tipoEnvio && p.tipoEnvio !== 'auto') return p.tipoEnvio;
-  var peso = parseFloat(p.peso)||0;
-  var dim  = parseFloat(p.dim)||0;
-  if(peso === 0 && dim === 0) return 'sin_datos';
-  if(peso > ML_PESO_MAX || dim > ML_DIM_MAX) return 'flete';
-  return 'ml';
-}
-
-function renderEnvioTag(p){
-  var tipo = detectarTipoEnvio(p);
-  var tags = {
-    ml:        '<span class="tag tag-stock" style="font-size:10px;">📦 ML Envíos</span>',
-    flete:     '<span class="tag tag-sin" style="font-size:10px;background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:var(--gold);">🚚 Cotizar flete</span>',
-    retiro:    '<span class="tag" style="font-size:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);">🏪 Solo retiro</span>',
-    sin_datos: '<span class="tag" style="font-size:10px;background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.2);color:var(--rojo);">⚠️ Sin datos</span>',
-  };
-  return tags[tipo] || tags['sin_datos'];
-}
-
-function calcEnvioGenerico(pesoId, dimId, detId){
-  var peso = parseFloat(document.getElementById(pesoId).value)||0;
-  var dim  = parseFloat(document.getElementById(dimId).value)||0;
-  var det  = document.getElementById(detId);
-  if(!peso && !dim){ det.textContent='Completá peso y dimensión para detectar automáticamente'; det.style.color='var(--muted)'; return; }
-  if(peso > ML_PESO_MAX || dim > ML_DIM_MAX){
-    det.innerHTML='🚚 <strong>Requiere cotización de flete</strong> — supera límites de ML Envíos ('+(peso>ML_PESO_MAX?'peso '+peso+'kg > 30kg':'')+(peso>ML_PESO_MAX&&dim>ML_DIM_MAX?' / ':'')+(dim>ML_DIM_MAX?'dimensión '+dim+'cm > 70cm':'')+')';
-    det.style.color='var(--gold)';
-  } else {
-    det.innerHTML='📦 <strong>ML Envíos disponible</strong> — Peso: '+peso+'kg / Dimensión mayor: '+dim+'cm — dentro de los límites';
-    det.style.color='var(--verde)';
-  }
-}
-
-function calcEnvioAgregar(){ calcEnvioGenerico('aPeso','aDim','aEnvioDetectado'); }
-function calcEnvioModal(){   calcEnvioGenerico('mPeso','mDim','mEnvioDetectado'); }
-
 function agregarProducto(){
   var nombre = document.getElementById('aNombre').value.trim();
   var desc = document.getElementById('aDesc').value.trim();
@@ -1230,15 +982,7 @@ function agregarProducto(){
   if(!cat){ toast('⚠️ Seleccioná una categoría', 'error'); document.getElementById('aCat').focus(); return; }
   if(!precio || precio <= 0){ toast('⚠️ Ingresá un precio válido', 'error'); document.getElementById('aPrecio').focus(); return; }
 
-  productos.push({
-    nombre, desc, categoria:cat, precio, stock, unidad,
-    peso: parseFloat(document.getElementById('aPeso').value)||0,
-    dim:  parseFloat(document.getElementById('aDim').value)||0,
-    tipoEnvio: document.getElementById('aTipoEnvio').value,
-    costoEnvio: parseFloat(document.getElementById('aCostoEnvio').value)||0,
-    costoFlete: parseFloat(document.getElementById('aCostoFlete').value)||0,
-    id:'p'+Date.now()
-  });
+  productos.push({ nombre, desc, categoria:cat, precio, stock, unidad, id:'p'+Date.now() });
   guardarDatos();
   limpiarFormAgregar();
   toast('✅ "'+nombre+'" agregado al catálogo', 'success');
@@ -1246,14 +990,11 @@ function agregarProducto(){
 }
 
 function limpiarFormAgregar(){
-  ['aNombre','aDesc','aPrecio','aPeso','aDim','aCostoEnvio','aCostoFlete'].forEach(function(id){ document.getElementById(id).value = ''; });
+  ['aNombre','aDesc','aPrecio'].forEach(function(id){ document.getElementById(id).value = ''; });
   document.getElementById('aCat').value = '';
   document.getElementById('aStock').value = '1';
   document.getElementById('aUnidad').value = 'unidad';
-  document.getElementById('aTipoEnvio').value = 'auto';
   document.getElementById('precioPreview').textContent = 'Con comisión: —';
-  document.getElementById('aEnvioDetectado').textContent = 'Completá peso y dimensión para detectar el tipo de envío automáticamente';
-  document.getElementById('aEnvioDetectado').style.color = 'var(--muted)';
 }
 
 function calcPreviewPrecio(){
@@ -1278,12 +1019,6 @@ function editarProducto(idx){
   document.getElementById('mPrecio').value = p.precio;
   document.getElementById('mStock').value = p.stock;
   document.getElementById('mUnidad').value = p.unidad||'unidad';
-  document.getElementById('mPeso').value = p.peso||'';
-  document.getElementById('mDim').value = p.dim||'';
-  document.getElementById('mTipoEnvio').value = p.tipoEnvio||'auto';
-  document.getElementById('mCostoEnvio').value = p.costoEnvio||'';
-  document.getElementById('mCostoFlete').value = p.costoFlete||'';
-  calcEnvioModal();
   document.getElementById('modalTitle').textContent = 'Editar: '+p.nombre.substring(0,30);
   document.getElementById('modalOv').classList.add('on');
 }
@@ -1302,11 +1037,6 @@ function guardarProducto(){
     precio,
     stock: parseInt(document.getElementById('mStock').value),
     unidad: document.getElementById('mUnidad').value,
-    peso: parseFloat(document.getElementById('mPeso').value)||0,
-    dim:  parseFloat(document.getElementById('mDim').value)||0,
-    tipoEnvio: document.getElementById('mTipoEnvio').value,
-    costoEnvio: parseFloat(document.getElementById('mCostoEnvio').value)||0,
-    costoFlete: parseFloat(document.getElementById('mCostoFlete').value)||0,
     id: productos[editIdx].id
   };
   guardarDatos();
@@ -1351,61 +1081,18 @@ function procesarExcel(e){
       if(data.length < 2){ toast('⚠️ El archivo no tiene datos', 'error'); return; }
 
       excelTemp = [];
-      // Detectar fila de encabezados
-      var headerRow = 0;
-      for(var h=0; h<Math.min(5,data.length); h++){
-        var r = data[h];
-        var vals = r.map(function(v){ return String(v||'').toLowerCase(); });
-        if(vals.some(function(v){ return v.includes('nombre') || v.includes('descripci'); })){
-          headerRow = h; break;
-        }
-      }
-
-      // Detectar índices de columnas por nombre
-      var headers = (data[headerRow]||[]).map(function(v){ return String(v||'').toLowerCase().trim(); });
-      function colIdx(keys){
-        for(var k=0; k<keys.length; k++){
-          for(var j=0; j<headers.length; j++){
-            if(headers[j].includes(keys[k])) return j;
-          }
-        }
-        return -1;
-      }
-      var iNombre   = colIdx(['nombre']);        if(iNombre<0)   iNombre=0;
-      var iDesc     = colIdx(['desc','descrip']); if(iDesc<0)     iDesc=1;
-      var iCat      = colIdx(['categ']);           if(iCat<0)      iCat=2;
-      var iPrecio   = colIdx(['precio','price']);  if(iPrecio<0)   iPrecio=3;
-      var iStock    = colIdx(['stock']);            if(iStock<0)    iStock=4;
-      var iUnidad   = colIdx(['unidad','unit']);    if(iUnidad<0)   iUnidad=5;
-      var iImagen   = colIdx(['imagen','image','img','url','foto']); 
-      var iProveedor= colIdx(['proveedor','prov','supplier']);
-
-      excelTemp = [];
-      for(var i=headerRow+1; i<data.length; i++){
+      for(var i=1; i<data.length; i++){
         var row = data[i];
-        if(!row || !row[iNombre]) continue;
-        var nombre = String(row[iNombre]||'').trim();
-        if(!nombre || nombre === '0') continue;
-
-        // Parsear precio — intentar múltiples columnas si el principal da 0
-        var precio = 0;
-        for(var pc=iPrecio; pc<Math.min(row.length, iPrecio+4); pc++){
-          var pv = parseFloat(String(row[pc]||'').replace(/[^0-9.,]/g,'').replace(',','.'));
-          if(pv > 0){ precio = pv; break; }
-        }
-
-        var item = {
-          nombre: nombre,
-          desc: String(row[iDesc]||nombre).trim(),
-          categoria: String(row[iCat]||'Otros').trim(),
-          precio: precio,
-          stock: parseInt(row[iStock])||1,
-          unidad: String(row[iUnidad]||'unidad').trim(),
+        if(!row[0]) continue;
+        excelTemp.push({
+          nombre: String(row[0]||'').trim(),
+          desc: String(row[1]||'').trim(),
+          categoria: String(row[2]||'Otros').trim(),
+          precio: parseFloat(row[3])||0,
+          stock: parseInt(row[4])||1,
+          unidad: String(row[5]||'unidad').trim(),
           id: 'p'+Date.now()+i
-        };
-        if(iImagen>=0 && row[iImagen]) item.imagen = String(row[iImagen]).trim();
-        if(iProveedor>=0 && row[iProveedor]) item.proveedor = String(row[iProveedor]).trim();
-        excelTemp.push(item);
+        });
       }
 
       var tbody = document.getElementById('excelBody');
@@ -1644,210 +1331,8 @@ document.getElementById('modalOv').addEventListener('click', function(e){
   if(e.target === this) cerrarModal();
 });
 
-/* ===== PEDIDOS ===== */
-var pedidos = [];
-
-function cargarPedidos(){
-  try { var p = localStorage.getItem('ferreteria_pedidos'); if(p) pedidos = JSON.parse(p); } catch(e){}
-}
-
-function guardarPedidos(){
-  localStorage.setItem('ferreteria_pedidos', JSON.stringify(pedidos));
-}
-
-function registrarPedido(){
-  var nombre = document.getElementById('pNombre').value.trim();
-  var wsp    = document.getElementById('pWsp').value.trim();
-  var prod   = document.getElementById('pProducto').value.trim();
-  if(!nombre){ toast('⚠️ El nombre del cliente es obligatorio', 'error'); return; }
-  if(!wsp){ toast('⚠️ El WhatsApp del cliente es obligatorio', 'error'); return; }
-  if(!prod){ toast('⚠️ Indicá el/los productos', 'error'); return; }
-
-  var pedido = {
-    id: 'ped'+Date.now(),
-    fecha: new Date().toLocaleString('es-AR'),
-    nombre, wsp,
-    producto: prod,
-    direccion: document.getElementById('pDireccion').value.trim(),
-    ciudad: document.getElementById('pCiudad').value.trim(),
-    precioProducto: parseFloat(document.getElementById('pPrecioProducto').value)||0,
-    tipoFlete: document.getElementById('pTipoFlete').value,
-    costoFlete: parseFloat(document.getElementById('pCostoFlete').value)||0,
-    obs: document.getElementById('pObs').value.trim(),
-    estado: document.getElementById('pCostoFlete').value && parseFloat(document.getElementById('pCostoFlete').value) > 0 ? 'cotizado' : 'pendiente',
-  };
-
-  pedidos.unshift(pedido);
-  guardarPedidos();
-  limpiarFormPedido();
-  renderPedidos();
-  toast('✅ Pedido registrado', 'success');
-
-  // Si ya tiene costo de flete, ofrecer notificar al cliente
-  if(pedido.costoFlete > 0){
-    setTimeout(function(){
-      if(confirm('¿Notificar al cliente por WhatsApp con el costo de flete?')){
-        notificarCliente(pedido);
-      }
-    }, 400);
-  }
-}
-
-function limpiarFormPedido(){
-  ['pNombre','pWsp','pProducto','pDireccion','pCiudad','pPrecioProducto','pCostoFlete','pObs'].forEach(function(id){
-    document.getElementById(id).value='';
-  });
-  document.getElementById('pTipoFlete').value='a_confirmar';
-}
-
-function renderPedidos(){
-  var filtro = document.getElementById('filtroPedidos').value;
-  var lista = filtro ? pedidos.filter(function(p){ return p.estado === filtro; }) : pedidos;
-
-  var pendientes  = pedidos.filter(function(p){ return p.estado==='pendiente'; }).length;
-  var confirmados = pedidos.filter(function(p){ return p.estado==='confirmado'; }).length;
-  var entregados  = pedidos.filter(function(p){ return p.estado==='entregado'; }).length;
-
-  document.getElementById('statPendientes').textContent  = pendientes;
-  document.getElementById('statConfirmados').textContent = confirmados;
-  document.getElementById('statEntregados').textContent  = entregados;
-
-  var badge = document.getElementById('pedidosBadge');
-  if(pendientes > 0){ badge.textContent = pendientes; badge.style.display='inline-block'; }
-  else { badge.style.display='none'; }
-
-  var div = document.getElementById('pedidosList');
-  if(!lista.length){
-    div.innerHTML='<div class="empty-state"><div class="es-icon">🚚</div><h3>Sin pedidos</h3><p>No hay pedidos con ese estado.</p></div>';
-    return;
-  }
-
-  var estadoConfig = {
-    pendiente:  { label:'⏳ Pendiente de cotización', bg:'rgba(232,184,75,0.08)', border:'rgba(232,184,75,0.2)', color:'var(--gold)' },
-    cotizado:   { label:'💰 Cotizado — esperando confirmación', bg:'rgba(99,102,241,0.08)', border:'rgba(99,102,241,0.2)', color:'#818CF8' },
-    confirmado: { label:'✅ Confirmado — en gestión', bg:'rgba(0,201,122,0.08)', border:'rgba(0,201,122,0.2)', color:'var(--verde)' },
-    entregado:  { label:'🏠 Entregado', bg:'rgba(255,255,255,0.03)', border:'var(--border)', color:'var(--muted)' },
-    cancelado:  { label:'❌ Cancelado', bg:'rgba(255,68,68,0.06)', border:'rgba(255,68,68,0.15)', color:'var(--rojo)' },
-  };
-
-  var tipoFleteLabel = {
-    ml:'📦 ML Envíos', andreani:'🚚 Andreani', oca:'🚚 OCA',
-    camioneta:'🚐 Camioneta', camion:'🚛 Camión', a_confirmar:'❓ A confirmar'
-  };
-
-  div.innerHTML = lista.map(function(p){
-    var cfg = estadoConfig[p.estado] || estadoConfig['pendiente'];
-    var total = (p.precioProducto||0) + (p.costoFlete||0);
-    return '<div style="border:1px solid '+cfg.border+';background:'+cfg.bg+';border-radius:10px;padding:20px;margin-bottom:12px;">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;">'+
-        '<div>'+
-          '<div style="font-size:15px;font-weight:700;margin-bottom:4px;">'+p.nombre+'</div>'+
-          '<div style="font-size:12px;color:var(--muted);">'+p.fecha+' · '+p.ciudad+'</div>'+
-        '</div>'+
-        '<div style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:50px;background:'+cfg.bg+';border:1px solid '+cfg.border+';color:'+cfg.color+';">'+cfg.label+'</div>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">'+
-        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;">'+
-          '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Producto</div>'+
-          '<div style="font-size:13px;font-weight:600;">'+p.producto+'</div>'+
-        '</div>'+
-        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;">'+
-          '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Tipo de flete</div>'+
-          '<div style="font-size:13px;font-weight:600;">'+(tipoFleteLabel[p.tipoFlete]||p.tipoFlete)+'</div>'+
-        '</div>'+
-        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;">'+
-          '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Costos</div>'+
-          '<div style="font-size:13px;font-weight:600;">'+
-            'Prod: $'+(p.precioProducto||0).toLocaleString('es-AR')+'<br>'+
-            'Flete: '+(p.costoFlete?'$'+p.costoFlete.toLocaleString('es-AR'):'<span style="color:var(--gold);">Pendiente</span>')+'<br>'+
-            'Total: <strong>$'+total.toLocaleString('es-AR')+'</strong>'+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-      (p.obs?'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">📝 '+p.obs+'</div>':'')+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
-        (p.estado==='pendiente'?'<button class="btn btn-gold btn-sm" onclick="cotizarPedido(\''+p.id+'\')">💰 Ingresar costo flete</button>':'')+
-        (p.estado==='cotizado'?'<button class="btn btn-success btn-sm" onclick="cambiarEstado(\''+p.id+'\',\'confirmado\')">✅ Confirmar pedido</button>':'')+
-        (p.estado==='confirmado'?'<button class="btn btn-success btn-sm" onclick="cambiarEstado(\''+p.id+'\',\'entregado\')">🏠 Marcar entregado</button>':'')+
-        '<button class="btn btn-secondary btn-sm" onclick="notificarClienteById(\''+p.id+'\')">💬 WhatsApp cliente</button>'+
-        '<button class="btn btn-danger btn-sm" onclick="cambiarEstado(\''+p.id+'\',\'cancelado\')">❌ Cancelar</button>'+
-        '<button class="btn btn-secondary btn-sm" onclick="eliminarPedido(\''+p.id+'\')">🗑</button>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-}
-
-function cotizarPedido(id){
-  var costo = prompt('Ingresá el costo del flete ($):');
-  if(costo === null) return;
-  costo = parseFloat(costo);
-  if(isNaN(costo)||costo<0){ toast('⚠️ Valor inválido', 'error'); return; }
-  var p = pedidos.find(function(x){ return x.id===id; });
-  if(!p) return;
-  p.costoFlete = costo;
-  p.estado = 'cotizado';
-  guardarPedidos();
-  renderPedidos();
-  toast('💰 Costo de flete actualizado: $'+costo.toLocaleString('es-AR'), 'success');
-  if(confirm('¿Notificar al cliente por WhatsApp con el costo de flete?')){
-    notificarCliente(p);
-  }
-}
-
-function cambiarEstado(id, nuevoEstado){
-  var p = pedidos.find(function(x){ return x.id===id; });
-  if(!p) return;
-  p.estado = nuevoEstado;
-  guardarPedidos();
-  renderPedidos();
-  var labels = {confirmado:'✅ Pedido confirmado', entregado:'🏠 Marcado como entregado', cancelado:'❌ Pedido cancelado'};
-  toast(labels[nuevoEstado]||'Estado actualizado', nuevoEstado==='cancelado'?'error':'success');
-}
-
-function eliminarPedido(id){
-  if(!confirm('¿Eliminar este pedido del historial?')) return;
-  pedidos = pedidos.filter(function(x){ return x.id!==id; });
-  guardarPedidos();
-  renderPedidos();
-  toast('🗑 Pedido eliminado', 'error');
-}
-
-function limpiarPedidos(){
-  if(!pedidos.length){ toast('No hay pedidos para eliminar', 'error'); return; }
-  if(!confirm('¿Eliminar TODO el historial de pedidos? Esta acción no se puede deshacer.')) return;
-  pedidos = [];
-  guardarPedidos();
-  renderPedidos();
-  toast('🗑 Historial de pedidos limpiado', 'error');
-}
-
-function notificarCliente(p){
-  var total = (p.precioProducto||0) + (p.costoFlete||0);
-  var msg =
-    '¡Hola '+p.nombre+'! 👋\n\n'+
-    'Tu pedido está listo para confirmar:\n\n'+
-    '📦 *Producto:* '+p.producto+'\n'+
-    '🚚 *Envío:* $'+(p.costoFlete||0).toLocaleString('es-AR')+'\n'+
-    '💵 *Total a pagar:* $'+total.toLocaleString('es-AR')+'\n\n'+
-    '─────────────────\n'+
-    '🏦 *Pago en 2 transferencias:*\n'+
-    '1️⃣ Producto ($'+(p.precioProducto||0).toLocaleString('es-AR')+')\n'+
-    '2️⃣ Flete ($'+(p.costoFlete||0).toLocaleString('es-AR')+')\n'+
-    '─────────────────\n'+
-    'CBU: '+(config.cbu||'—')+'\n'+
-    'Alias: '+(config.alias||'—')+'\n\n'+
-    '¿Confirmamos? 🤝';
-  window.open('https://wa.me/'+p.wsp+'?text='+encodeURIComponent(msg), '_blank');
-}
-
-function notificarClienteById(id){
-  var p = pedidos.find(function(x){ return x.id===id; });
-  if(p) notificarCliente(p);
-}
-
 /* ===== INIT ===== */
 cargarDatos();
-cargarPedidos();
 renderTabla();
 </script>
 </body>
