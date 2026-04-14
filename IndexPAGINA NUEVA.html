@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferretería Don Miguel — A tu puerta</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+:root {
+  --bg:    #08080C;
+  --bg2:   #0F0F16;
+  --bg3:   #14141E;
+  --org:   #FF4D00;
+  --org2:  #FF7A30;
+  --gold:  #E8B84B;
+  --white: #F2EFE8;
+  --muted: rgba(242,239,232,0.38);
+  --line:  rgba(242,239,232,0.07);
+  --verde: #00C97A;
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   NOISE OVERLAY
+============================================================ */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.35;
+}
+
+/* ============================================================
+   CANVAS 3D
+============================================================ */
+#world {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
+}
+
+/* ============================================================
+   NAV
+============================================================ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 28px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  mix-blend-mode: normal;
+}
+
+nav::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(8,8,12,0.9) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.nav-logo {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; gap: 2px;
+  text-decoration: none;
+}
+
+.nav-logo-top {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 13px; font-weight: 900;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--white);
+}
+
+.nav-logo-bot {
+  font-size: 10px; font-weight: 400;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--org);
+}
+
+.nav-right {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 20px;
+}
+
+.nav-link {
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-link:hover { color: var(--white); }
+
+.nav-cta {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--bg); background: var(--white);
+  padding: 10px 22px; border-radius: 50px;
+  text-decoration: none;
+  transition: background 0.3s, color 0.3s;
+}
+.nav-cta:hover { background: var(--org); color: white; }
+
+/* ============================================================
+   HERO
+============================================================ */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 48px 72px;
+  overflow: hidden;
+}
+
+/* Gradiente radial ambiental */
+.hero-ambient {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 20%, rgba(255,77,0,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(232,184,75,0.05) 0%, transparent 60%);
+}
+
+/* Grid de líneas */
+.hero-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(242,239,232,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242,239,232,0.03) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+}
+
+/* Número grande decorativo */
+.hero-deco {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(200px, 35vw, 480px);
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.04);
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 28px;
+  opacity: 0; animation: slideUp 1s 0.2s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.hero-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--org);
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 12px var(--org);
+}
+
+.hero-eyebrow-text {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(52px, 9vw, 120px);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  margin-bottom: 40px;
+  opacity: 0; animation: slideUp 1s 0.4s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.35);
+  display: block;
+}
+
+.hero h1 strong {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--org) 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+}
+
+.hero-bottom {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 40px;
+  opacity: 0; animation: slideUp 1s 0.6s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.hero-desc {
+  max-width: 380px;
+  font-size: 15px; font-weight: 300; line-height: 1.75;
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+}
+
+.btn-hero-primary {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--org);
+  color: white; text-decoration: none;
+  padding: 16px 32px; border-radius: 50px;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 40px rgba(255,77,0,0.35);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative; overflow: hidden;
+}
+.btn-hero-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 60px rgba(255,77,0,0.5); }
+.btn-hero-primary:hover::before { opacity: 1; }
+
+.btn-hero-sec {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted); text-decoration: none;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 16px 24px;
+  border-radius: 50px;
+  border: 1px solid var(--line);
+  transition: color 0.3s, border-color 0.3s;
+}
+.btn-hero-sec:hover { color: var(--white); border-color: rgba(242,239,232,0.2); }
+
+/* Stats flotantes */
+.hero-stats {
+  position: absolute; right: 48px; top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 24px;
+  opacity: 0; animation: slideLeft 1s 0.8s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.stat-item {
+  text-align: right;
+  border-right: 1px solid var(--line);
+  padding-right: 20px;
+}
+
+.stat-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 32px; font-weight: 700;
+  color: var(--white); line-height: 1;
+  display: block;
+}
+
+.stat-label {
+  font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  display: block; margin-top: 4px;
+}
+
+/* Scroll indicator */
+.scroll-hint {
+  position: absolute; bottom: 72px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0; animation: fadeIn 1s 1.2s ease forwards;
+}
+.scroll-hint span {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); writing-mode: vertical-rl;
+}
+.scroll-line {
+  width: 1px; height: 60px;
+  background: linear-gradient(180deg, var(--org), transparent);
+  animation: scrollPulse 2s infinite;
+}
+
+/* ============================================================
+   MARQUEE
+============================================================ */
+.marquee-section {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0; overflow: hidden;
+  background: var(--bg2);
+}
+
+.marquee-track {
+  display: flex; gap: 0;
+  animation: marquee 20s linear infinite;
+  width: max-content;
+}
+
+.marquee-item {
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 40px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 13px; font-weight: 400;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap;
+}
+
+.marquee-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--org); flex-shrink: 0;
+}
+
+/* ============================================================
+   SECCIÓN: CÓMO FUNCIONA
+============================================================ */
+.como {
+  position: relative; z-index: 1;
+  padding: 140px 48px;
+}
+
+.section-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 100px; gap: 40px;
+}
+
+.section-number {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--org);
+}
+
+.section-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.section-desc {
+  max-width: 320px;
+  font-size: 14px; font-weight: 300; line-height: 1.8;
+  color: var(--muted); text-align: right;
+}
+
+.steps-wrap {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 2px; overflow: hidden;
+}
+
+.step {
+  background: var(--bg2);
+  padding: 52px 40px;
+  transition: background 0.4s;
+  position: relative; overflow: hidden;
+}
+
+.step::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,77,0,0.04), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+
+.step:hover { background: var(--bg3); }
+.step:hover::before { opacity: 1; }
+
+.step-idx {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; color: var(--org);
+  margin-bottom: 48px;
+}
+
+.step-icon-wrap {
+  width: 64px; height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin-bottom: 32px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.step:hover .step-icon-wrap {
+  border-color: rgba(255,77,0,0.3);
+  box-shadow: 0 0 24px rgba(255,77,0,0.1);
+}
+
+.step-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px; font-weight: 700; line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.step-desc {
+  font-size: 14px; font-weight: 300; line-height: 1.75;
+  color: var(--muted);
+}
+
+/* ============================================================
+   SECCIÓN: CATÁLOGO FEATURED
+============================================================ */
+.catalogo-featured {
+  position: relative; z-index: 1;
+  padding: 0 48px 140px;
+}
+
+.cat-grid-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 48px;
+}
+
+.cat-grid-header h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 900; letter-spacing: -0.03em; line-height: 1;
+}
+
+.ver-todo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--org);
+  text-decoration: none; cursor: pointer;
+  transition: gap 0.3s;
+}
+.ver-todo:hover { gap: 14px; }
+
+/* Layout asimétrico tipo editorial */
+.feat-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+}
+
+.feat-card {
+  position: relative; overflow: hidden;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  group: true;
+  transition: border-color 0.4s;
+}
+.feat-card:hover { border-color: rgba(255,77,0,0.2); }
+
+.feat-card.large {
+  grid-row: 1 / 3;
+  min-height: 560px;
+}
+
+.feat-card.medium { min-height: 270px; }
+
+/* Ilustración SVG centrada */
+.feat-img {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+  transition: transform 0.6s cubic-bezier(.16,1,.3,1);
+}
+
+.feat-card:hover .feat-img { transform: scale(1.04); }
+
+.feat-img svg { width: 100%; height: 100%; max-width: 200px; max-height: 200px; }
+
+.feat-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(8,8,12,0.95) 0%, rgba(8,8,12,0.3) 50%, transparent 100%);
+}
+
+.feat-info {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 28px 32px;
+}
+
+.feat-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--org);
+  margin-bottom: 8px; display: block;
+}
+
+.feat-name {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 700; line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.feat-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+
+.feat-price {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 24px; font-weight: 900;
+  background: linear-gradient(135deg, var(--white), rgba(255,255,255,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.feat-add {
+  position: absolute; top: 20px; right: 20px;
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  backdrop-filter: blur(8px);
+}
+.feat-add:hover {
+  background: var(--org);
+  border-color: var(--org);
+  transform: scale(1.1);
+}
+
+/* ============================================================
+   BUSCADOR HERO - GRANDE
+============================================================ */
+.search-section {
+  position: relative; z-index: 1;
+  padding: 100px 48px;
+  background: var(--bg2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.search-section h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900; letter-spacing: -0.03em;
+  margin-bottom: 16px; line-height: 1;
+}
+
+.search-section p {
+  color: var(--muted); font-size: 15px; font-weight: 300;
+  margin-bottom: 48px; line-height: 1.7;
+}
+
+.search-giant {
+  display: flex; align-items: center;
+  max-width: 720px; margin: 0 auto 24px;
+  background: var(--bg3);
+  border: 1px solid rgba(255,77,0,0.3);
+  border-radius: 80px;
+  padding: 8px 8px 8px 32px;
+  box-shadow: 0 0 60px rgba(255,77,0,0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-giant:focus-within {
+  border-color: var(--org);
+  box-shadow: 0 0 80px rgba(255,77,0,0.2);
+}
+
+.search-giant input {
+  flex: 1; background: none; border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px; font-weight: 400;
+  color: var(--white); outline: none;
+  padding: 12px 0;
+}
+.search-giant input::placeholder { color: var(--muted); }
+
+.search-giant button {
+  background: var(--org);
+  color: white; border: none;
+  padding: 16px 36px; border-radius: 60px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.search-giant button:hover { opacity: 0.85; }
+
+.search-chips {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+
+.search-chip {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted); padding: 8px 18px;
+  border-radius: 50px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.search-chip:hover {
+  background: rgba(255,77,0,0.08);
+  border-color: rgba(255,77,0,0.3);
+  color: var(--org2);
+}
+
+/* ============================================================
+   GRILLA CATÁLOGO FULL
+============================================================ */
+.catalogo-full {
+  position: relative; z-index: 1;
+  padding: 100px 48px 140px;
+}
+
+.cat-filters-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 60px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 28px;
+}
+
+.cf-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 9px 20px; border-radius: 50px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.25s;
+}
+.cf-btn:hover, .cf-btn.on {
+  background: var(--org);
+  border-color: var(--org);
+  color: white;
+}
+
+.prod-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.prod-item {
+  background: var(--bg2);
+  padding: 28px;
+  transition: background 0.3s;
+  cursor: pointer; position: relative;
+}
+.prod-item:hover { background: var(--bg3); }
+
+.pi-img {
+  height: 140px; display: flex;
+  align-items: center; justify-content: center;
+  margin-bottom: 20px;
+  font-size: 64px;
+}
+.pi-img svg { max-width: 100px; max-height: 100px; }
+
+.pi-cat {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--org); margin-bottom: 8px;
+}
+
+.pi-name {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px; font-weight: 700;
+  line-height: 1.3; margin-bottom: 4px;
+}
+
+.pi-desc { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+
+.pi-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.pi-price {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px; font-weight: 700;
+}
+
+.pi-btn {
+  width: 36px; height: 36px;
+  background: rgba(255,77,0,0.1);
+  border: 1px solid rgba(255,77,0,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.pi-btn:hover { background: var(--org); transform: scale(1.1); }
+
+/* ============================================================
+   SECCIÓN NO ENCONTRÁS
+============================================================ */
+.noencontras {
+  position: relative; z-index: 1;
+  padding: 120px 48px;
+  background: var(--bg2);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.noencontras h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900; letter-spacing: -0.03em;
+  line-height: 1; margin-bottom: 20px;
+}
+
+.noencontras p {
+  color: var(--muted); font-size: 15px; max-width: 440px;
+  margin: 0 auto 56px; line-height: 1.75;
+}
+
+.manual-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line);
+  max-width: 900px; margin: 0 auto 56px;
+}
+
+.mc {
+  background: var(--bg3);
+  padding: 48px 36px; text-align: left;
+}
+
+.mc-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 3px; color: var(--org);
+  margin-bottom: 28px;
+}
+
+.mc-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+
+.mc-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px; font-weight: 700; margin-bottom: 10px;
+}
+
+.mc-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+.link-field {
+  display: flex; gap: 0;
+  max-width: 540px; margin: 0 auto 16px;
+  border: 1px solid var(--line);
+  border-radius: 80px; overflow: hidden;
+  background: var(--bg3);
+  transition: border-color 0.3s;
+}
+.link-field:focus-within { border-color: rgba(255,77,0,0.4); }
+
+.link-field input {
+  flex: 1; background: none; border: none;
+  padding: 16px 24px;
+  color: var(--white);
+  font-family: 'Manrope', sans-serif; font-size: 14px; outline: none;
+}
+.link-field input::placeholder { color: var(--muted); }
+
+.link-field button {
+  background: var(--verde);
+  color: white; border: none;
+  padding: 0 28px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: opacity 0.2s;
+}
+.link-field button:hover { opacity: 0.85; }
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  position: relative; z-index: 1;
+  padding: 80px 48px 40px;
+  border-top: 1px solid var(--line);
+}
+
+.footer-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 80px; gap: 40px;
+}
+
+.footer-brand h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 28px; font-weight: 900;
+  letter-spacing: -0.02em; margin-bottom: 10px;
+}
+
+.footer-brand p {
+  font-size: 13px; color: var(--muted); max-width: 280px; line-height: 1.7;
+}
+
+.footer-links {
+  display: flex; gap: 80px;
+}
+
+.footer-col h4 {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 20px;
+}
+
+.footer-col a {
+  display: block; text-decoration: none;
+  font-size: 14px; color: var(--muted);
+  margin-bottom: 12px; transition: color 0.25s;
+}
+.footer-col a:hover { color: var(--white); }
+
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 28px; border-top: 1px solid var(--line);
+}
+
+.footer-bottom p { font-size: 12px; color: var(--muted); }
+.footer-bottom a { color: var(--org); text-decoration: none; }
+
+/* ============================================================
+   CARRITO PANEL
+============================================================ */
+.overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: none; backdrop-filter: blur(8px); }
+.overlay.on { display: block; }
+
+.cart-drawer {
+  position: fixed; top: 0; right: -500px;
+  width: 460px; max-width: 100vw; height: 100vh;
+  background: var(--bg2); border-left: 1px solid var(--line);
+  z-index: 300; display: flex; flex-direction: column;
+  transition: right 0.4s cubic-bezier(.16,1,.3,1);
+}
+.cart-drawer.open { right: 0; }
+
+.cd-head {
+  padding: 28px 32px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cd-head h2 {
+  font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px;
+}
+.cd-close {
+  width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%;
+  background: none; color: var(--white); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;
+}
+.cd-close:hover { border-color: rgba(255,77,0,0.4); }
+
+.cd-items { flex: 1; overflow-y: auto; padding: 20px 32px; }
+.cd-empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+.cd-empty .bi { font-size: 48px; margin-bottom: 14px; }
+
+.cd-item {
+  display: flex; gap: 14px; padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cd-item-img {
+  width: 60px; height: 60px; background: var(--bg3);
+  border: 1px solid var(--line); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  flex-shrink: 0;
+}
+.cd-item-info { flex: 1; }
+.cd-item-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.4; }
+.cd-item-price { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; color: var(--org2); }
+.cd-ctrl { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.cc-btn {
+  width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 50%;
+  background: none; color: var(--white); cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;
+}
+.cc-btn:hover { border-color: var(--org); }
+.cc-qty { font-size: 14px; font-weight: 600; min-width: 18px; text-align: center; }
+.cc-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; margin-left: auto; transition: color 0.2s; }
+.cc-del:hover { color: #ff4444; }
+
+.cd-foot { padding: 20px 32px 32px; border-top: 1px solid var(--line); }
+.cd-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.cd-row.com { color: var(--verde); font-weight: 600; }
+.cd-total { display: flex; justify-content: space-between; font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 700; padding: 16px 0; border-top: 1px solid var(--line); margin-bottom: 20px; }
+.cd-checkout {
+  width: 100%; padding: 16px;
+  background: var(--org); color: white; border: none; border-radius: 50px;
+  font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; margin-bottom: 10px;
+  box-shadow: 0 0 30px rgba(255,77,0,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cd-checkout:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(255,77,0,0.4); }
+.cd-wsp {
+  width: 100%; padding: 13px;
+  background: rgba(0,201,122,0.08);
+  border: 1px solid rgba(0,201,122,0.2);
+  color: var(--verde); border-radius: 50px;
+  font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s;
+}
+.cd-wsp:hover { background: rgba(0,201,122,0.15); }
+
+/* ============================================================
+   MODAL PAGO
+============================================================ */
+.modal-ov { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(12px); }
+.modal-ov.on { display: flex; }
+
+.modal-box {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 4px; max-width: 560px; width: 100%;
+  max-height: 92vh; overflow-y: auto;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+}
+
+.mb-head {
+  padding: 28px 32px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+.mb-head h2 { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+.mb-steps { display: flex; padding: 20px 32px; border-bottom: 1px solid var(--line); gap: 0; }
+.mb-step { flex: 1; text-align: center; position: relative; }
+.mb-step:not(:last-child)::after { content: ''; position: absolute; top: 12px; left: 50%; width: 100%; height: 1px; background: var(--line); z-index: 0; }
+.mb-step.on:not(:last-child)::after, .mb-step.done:not(:last-child)::after { background: var(--org); }
+.mb-snum { width: 24px; height: 24px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; position: relative; z-index: 1; }
+.mb-step.on .mb-snum { background: var(--org); border-color: var(--org); color: white; box-shadow: 0 0 16px rgba(255,77,0,0.4); }
+.mb-step.done .mb-snum { background: var(--verde); border-color: var(--verde); color: white; }
+.mb-slabel { font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.mb-step.on .mb-slabel { color: var(--org); }
+
+.mb-body { padding: 28px 32px; }
+
+.cbu-blk { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px; padding: 28px; text-align: center; margin-bottom: 20px; }
+.cbu-blk .cl { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.cbu-blk .cn { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 3px; margin-bottom: 6px; word-break: break-all; }
+.cbu-blk .ca { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.btn-copy { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.2); color: var(--gold); padding: 8px 20px; border-radius: 50px; cursor: pointer; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; transition: background 0.2s; }
+.btn-copy:hover { background: rgba(232,184,75,0.2); }
+
+.monto-blk { background: rgba(232,184,75,0.06); border: 1px solid rgba(232,184,75,0.15); border-radius: 4px; padding: 16px; text-align: center; margin-bottom: 18px; }
+.monto-blk .ml { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.monto-blk .mv { font-family: 'Unbounded', sans-serif; font-size: 32px; font-weight: 900; }
+
+.aviso-blk { background: rgba(0,201,122,0.06); border: 1px solid rgba(0,201,122,0.15); border-radius: 4px; padding: 14px 18px; font-size: 13px; color: var(--verde); line-height: 1.6; margin-bottom: 18px; }
+
+.res-blk { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px; padding: 18px; }
+.res-blk h4 { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.res-line { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 4px 0; }
+.res-total { display: flex; justify-content: space-between; font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--line); }
+
+.fg { margin-bottom: 16px; }
+.fg label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.fg input, .fg textarea { width: 100%; padding: 13px 16px; background: var(--bg3); border: 1px solid var(--line); border-radius: 4px; color: var(--white); font-family: 'Manrope', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.fg input:focus, .fg textarea:focus { border-color: rgba(255,77,0,0.4); }
+.fg textarea { resize: vertical; min-height: 80px; }
+.fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.upload-blk { border: 1px dashed var(--line); border-radius: 4px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+.upload-blk:hover { border-color: rgba(255,77,0,0.3); background: rgba(255,77,0,0.03); }
+.upload-blk input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-blk .ui { font-size: 28px; margin-bottom: 8px; }
+.upload-blk p { font-size: 13px; color: var(--muted); }
+.upload-blk .uh { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 4px; }
+.upload-prev { max-width: 100%; max-height: 80px; border-radius: 4px; margin-top: 10px; display: none; }
+
+.confirm-blk { text-align: center; padding: 20px 0; }
+.confirm-circle { width: 72px; height: 72px; border: 1px solid rgba(0,201,122,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; box-shadow: 0 0 30px rgba(0,201,122,0.15); }
+.confirm-blk h3 { font-family: 'Unbounded', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 12px; letter-spacing: -0.02em; }
+.confirm-blk p { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+.confirm-wsp { background: rgba(0,201,122,0.06); border: 1px solid rgba(0,201,122,0.15); border-radius: 4px; padding: 16px; font-size: 12px; color: var(--verde); text-align: left; margin-bottom: 20px; line-height: 1.8; }
+.confirm-date { background: rgba(232,184,75,0.06); border: 1px solid rgba(232,184,75,0.15); border-radius: 4px; padding: 14px; }
+.confirm-date .dl { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.confirm-date .dv { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; }
+
+.mb-foot { padding: 16px 32px 28px; display: flex; gap: 12px; }
+.btn-msec { flex: 1; padding: 13px; background: var(--bg3); border: 1px solid var(--line); color: var(--muted); border-radius: 50px; font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.2s; }
+.btn-msec:hover { border-color: rgba(255,255,255,0.2); }
+.btn-mpri { flex: 2; padding: 13px; background: var(--org); color: white; border: none; border-radius: 50px; font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 0 24px rgba(255,77,0,0.3); transition: transform 0.2s; }
+.btn-mpri:hover { transform: translateY(-1px); }
+.btn-mpri.verde { background: var(--verde); box-shadow: 0 0 24px rgba(0,201,122,0.3); }
+
+/* ============================================================
+   TOAST & WSP FLOAT
+============================================================ */
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--bg3); border: 1px solid var(--line); color: var(--white); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 600; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.wsp-btn { position: fixed; bottom: 28px; right: 28px; background: var(--verde); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; text-decoration: none; z-index: 150; box-shadow: 0 0 32px rgba(0,201,122,0.35); transition: transform 0.2s; }
+.wsp-btn:hover { transform: scale(1.1); }
+
+/* ============================================================
+   ANIMACIONES
+============================================================ */
+@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 12px var(--org);} 50%{opacity:0.6;transform:scale(0.85);box-shadow:0 0 6px var(--org);} }
+@keyframes scrollPulse { 0%{transform:scaleY(0);transform-origin:top;} 50%{transform:scaleY(1);transform-origin:top;} 51%{transform:scaleY(1);transform-origin:bottom;} 100%{transform:scaleY(0);transform-origin:bottom;} }
+@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:900px){
+  nav { padding: 20px 24px; }
+  .nav-right .nav-link { display: none; }
+  .hero { padding: 0 24px 56px; }
+  .hero-stats { display: none; }
+  .hero h1 { font-size: clamp(42px, 12vw, 72px); }
+  .como, .catalogo-featured, .catalogo-full, .noencontras { padding-left: 24px; padding-right: 24px; }
+  .steps-wrap { grid-template-columns: 1fr; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .feat-card.large { grid-row: auto; min-height: 320px; }
+  .manual-cards { grid-template-columns: 1fr; }
+  .cart-drawer { width: 100%; }
+  .modal-box { border-radius: 16px 16px 0 0; max-height: 95vh; }
+  .modal-ov { align-items: flex-end; padding: 0; }
+  .fg-row { grid-template-columns: 1fr; }
+  .mb-body,.mb-head,.mb-foot { padding-left: 20px; padding-right: 20px; }
+  .footer-top { flex-direction: column; }
+  .footer-links { flex-direction: column; gap: 40px; }
+  .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="world"></canvas>
+<div class="toast" id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-top">Don Miguel</div>
+    <div class="nav-logo-bot">Ferretería · Est. 1987</div>
+  </a>
+  <div class="nav-right">
+    <a href="#como" class="nav-link">Cómo funciona</a>
+    <a href="#catalogo-full" class="nav-link">Catálogo</a>
+    <a href="https://wa.me/5492995514460" target="_blank" class="nav-cta">Contactar</a>
+    <button class="nav-cta" onclick="abrirCarrito()" style="border:none;cursor:pointer;">
+      🛒 <span id="navBadge" style="display:none;background:var(--org);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;margin-left:4px;" id="cartBadge">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-ambient"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-deco">DM</div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">35+</span>
+      <span class="stat-label">Años</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">500+</span>
+      <span class="stat-label">Productos</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">5d</span>
+      <span class="stat-label">Entrega</span>
+    </div>
+  </div>
+
+  <div class="hero-eyebrow">
+    <div class="hero-dot"></div>
+    <span class="hero-eyebrow-text">Envíos a domicilio · Argentina</span>
+  </div>
+
+  <h1>
+    <em>Cualquier</em>
+    <strong>Producto</strong>
+    A Tu Puerta.
+  </h1>
+
+  <div class="hero-bottom">
+    <p class="hero-desc">
+      Buscamos y entregamos cualquier producto de ferretería en Argentina. Sin filas, sin vueltas. Solo una pequeña comisión por el servicio.
+    </p>
+    <div class="hero-actions">
+      <a href="#catalogo-full" class="btn-hero-primary">
+        Ver catálogo
+        <span>→</span>
+      </a>
+      <a href="https://wa.me/5492995514460" target="_blank" class="btn-hero-sec">
+        💬 WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marqueeTrack">
+    <div class="marquee-item"><div class="marquee-dot"></div>Herramientas</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Electricidad</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Plomería</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Pintura</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Fijaciones</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Seguridad</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Construcción</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Herramientas eléctricas</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Envío a domicilio</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Sin filas</div>
+    <!-- Copia para loop infinito -->
+    <div class="marquee-item"><div class="marquee-dot"></div>Herramientas</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Electricidad</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Plomería</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Pintura</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Fijaciones</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Seguridad</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Construcción</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Herramientas eléctricas</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Envío a domicilio</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Sin filas</div>
+  </div>
+</div>
+
+<!-- CÓMO FUNCIONA -->
+<section class="como" id="como">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="section-header">
+      <div>
+        <div class="section-number">01 — Proceso</div>
+        <h2 class="section-title">Así de<br>simple.</h2>
+      </div>
+      <p class="section-desc">Tres pasos y el producto llega a tu puerta. Sin complicaciones, sin filas, sin perder el tiempo.</p>
+    </div>
+    <div class="steps-wrap">
+      <div class="step">
+        <div class="step-idx">01</div>
+        <div class="step-icon-wrap">🔍</div>
+        <div class="step-title">Buscá<br>el producto</div>
+        <p class="step-desc">Filtrá por categoría o buscá directamente lo que necesitás en nuestro catálogo.</p>
+      </div>
+      <div class="step">
+        <div class="step-idx">02</div>
+        <div class="step-icon-wrap">💳</div>
+        <div class="step-title">Pagá por<br>transferencia</div>
+        <p class="step-desc">Agregá al carrito, completá tus datos y transferí al CBU. Simple y seguro.</p>
+      </div>
+      <div class="step">
+        <div class="step-idx">03</div>
+        <div class="step-icon-wrap">🏠</div>
+        <div class="step-title">Recibí<br>en casa</div>
+        <p class="step-desc">Gestionamos la compra y coordinamos la entrega en tu domicilio en 5 días hábiles.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DESTACADOS EDITORIAL -->
+<section class="catalogo-featured">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="cat-grid-header">
+      <div>
+        <div class="section-number" style="margin-bottom:10px;">02 — Destacados</div>
+        <h2>Lo más<br>pedido.</h2>
+      </div>
+      <a href="#catalogo-full" class="ver-todo">Ver todo el catálogo →</a>
+    </div>
+
+    <div class="feat-grid">
+      <!-- Card grande -->
+      <div class="feat-card large" onclick="addCartById('e001')">
+        <div class="feat-img">
+          <svg viewBox="0 0 200 200" fill="none"><rect x="65" y="20" width="70" height="100" rx="12" fill="#1565C0"/><rect x="72" y="28" width="56" height="72" rx="8" fill="#1976D2"/><circle cx="100" cy="64" r="24" fill="#0D47A1"/><circle cx="100" cy="64" r="12" fill="#333"/><rect x="88" y="120" width="24" height="52" rx="5" fill="#555"/><rect x="78" y="165" width="44" height="10" rx="3" fill="#444"/><circle cx="100" cy="64" r="5" fill="#666"/></svg>
+        </div>
+        <div class="feat-overlay"></div>
+        <div class="feat-info">
+          <span class="feat-tag">Herramientas eléctricas</span>
+          <div class="feat-name">Taladro percutor<br>750W Pro</div>
+          <div class="feat-sub">Con maletín y set de brocas</div>
+          <div class="feat-price">$95.700</div>
+        </div>
+        <button class="feat-add" onclick="event.stopPropagation();addCartById('e001')">＋</button>
+      </div>
+
+      <!-- Cards medianas -->
+      <div class="feat-card medium" onclick="addCartById('s001')">
+        <div class="feat-img">
+          <svg viewBox="0 0 200 200" fill="none"><rect x="60" y="90" width="80" height="90" rx="8" fill="#455A64"/><rect x="67" y="97" width="66" height="78" rx="5" fill="#546E7A"/><path d="M70 90 Q70 45 100 45 Q130 45 130 90" stroke="#607D8B" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="100" cy="136" r="14" fill="#90A4AE"/><rect x="97" y="150" width="6" height="18" rx="2" fill="#90A4AE"/></svg>
+        </div>
+        <div class="feat-overlay"></div>
+        <div class="feat-info">
+          <span class="feat-tag">Seguridad</span>
+          <div class="feat-name">Candado 60mm</div>
+          <div class="feat-price">$10.780</div>
+        </div>
+        <button class="feat-add" onclick="event.stopPropagation();addCartById('s001')">＋</button>
+      </div>
+
+      <div class="feat-card medium" onclick="addCartById('pi001')">
+        <div class="feat-img">
+          <svg viewBox="0 0 200 200" fill="none"><rect x="65" y="30" width="70" height="110" rx="8" fill="#FF4D00"/><rect x="72" y="38" width="56" height="90" rx="5" fill="#FF6B35"/><rect x="80" y="46" width="40" height="30" rx="3" fill="rgba(255,255,255,0.2)"/><rect x="60" y="136" width="80" height="20" rx="4" fill="#D84315"/></svg>
+        </div>
+        <div class="feat-overlay"></div>
+        <div class="feat-info">
+          <span class="feat-tag">Pintura</span>
+          <div class="feat-name">Látex 4L<br>Sherwin</div>
+          <div class="feat-price">$26.400</div>
+        </div>
+        <button class="feat-add" onclick="event.stopPropagation();addCartById('pi001')">＋</button>
+      </div>
+
+      <div class="feat-card medium" onclick="addCartById('el001')">
+        <div class="feat-img">
+          <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="65" fill="none" stroke="#FF6B00" stroke-width="18"/><circle cx="100" cy="100" r="42" fill="none" stroke="#FFB800" stroke-width="12"/><circle cx="100" cy="100" r="18" fill="#FF4D00"/></svg>
+        </div>
+        <div class="feat-overlay"></div>
+        <div class="feat-info">
+          <span class="feat-tag">Electricidad</span>
+          <div class="feat-name">Cable duplex<br>100m IRAM</div>
+          <div class="feat-price">$41.800</div>
+        </div>
+        <button class="feat-add" onclick="event.stopPropagation();addCartById('el001')">＋</button>
+      </div>
+
+      <div class="feat-card medium" onclick="addCartById('c001')">
+        <div class="feat-img">
+          <svg viewBox="0 0 200 200" fill="none"><line x1="55" y1="15" x2="55" y2="185" stroke="#B0BEC5" stroke-width="10" stroke-linecap="round"/><line x1="145" y1="15" x2="145" y2="185" stroke="#B0BEC5" stroke-width="10" stroke-linecap="round"/><rect x="48" y="45" width="104" height="14" rx="3" fill="#90A4AE"/><rect x="48" y="85" width="104" height="14" rx="3" fill="#90A4AE"/><rect x="48" y="125" width="104" height="14" rx="3" fill="#90A4AE"/><rect x="48" y="160" width="104" height="14" rx="3" fill="#90A4AE"/></svg>
+        </div>
+        <div class="feat-overlay"></div>
+        <div class="feat-info">
+          <span class="feat-tag">Construcción</span>
+          <div class="feat-name">Escalera<br>aluminio 6p</div>
+          <div class="feat-price">$52.800</div>
+        </div>
+        <button class="feat-add" onclick="event.stopPropagation();addCartById('c001')">＋</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSCADOR -->
+<section class="search-section">
+  <div class="section-number" style="margin-bottom:16px;">03 — Buscador</div>
+  <h2>¿Qué necesitás<br>hoy?</h2>
+  <p>Buscá cualquier producto y lo gestionamos para vos.</p>
+  <div class="search-giant">
+    <input type="text" id="searchInput" placeholder="Ej: taladro, cable, canilla, pintura..." autocomplete="off">
+    <button onclick="buscar()">Buscar →</button>
+  </div>
+  <div class="search-chips">
+    <button class="search-chip" onclick="buscarQ('martillo')">Martillo</button>
+    <button class="search-chip" onclick="buscarQ('taladro')">Taladro</button>
+    <button class="search-chip" onclick="buscarQ('cable')">Cables</button>
+    <button class="search-chip" onclick="buscarQ('pintura')">Pinturas</button>
+    <button class="search-chip" onclick="buscarQ('plomería')">Plomería</button>
+    <button class="search-chip" onclick="buscarQ('seguridad')">Seguridad</button>
+    <button class="search-chip" onclick="buscarQ('escalera')">Escaleras</button>
+  </div>
+</section>
+
+<!-- CATÁLOGO COMPLETO -->
+<section class="catalogo-full" id="catalogo-full">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="section-header" style="margin-bottom:0;">
+      <div>
+        <div class="section-number" style="margin-bottom:10px;">04 — Catálogo</div>
+        <h2 class="section-title" style="font-size:clamp(28px,4vw,48px);">Todos<br>los productos.</h2>
+      </div>
+    </div>
+
+    <div class="cat-filters-bar" id="cfBar" style="margin-top:48px;">
+      <button class="cf-btn on" onclick="filtrar('todas',this)">Todos</button>
+      <button class="cf-btn" onclick="filtrar('Herramientas',this)">Herramientas</button>
+      <button class="cf-btn" onclick="filtrar('Herramientas eléctricas',this)">Eléctricas</button>
+      <button class="cf-btn" onclick="filtrar('Electricidad',this)">Electricidad</button>
+      <button class="cf-btn" onclick="filtrar('Plomería',this)">Plomería</button>
+      <button class="cf-btn" onclick="filtrar('Pintura',this)">Pintura</button>
+      <button class="cf-btn" onclick="filtrar('Fijaciones',this)">Fijaciones</button>
+      <button class="cf-btn" onclick="filtrar('Seguridad',this)">Seguridad</button>
+      <button class="cf-btn" onclick="filtrar('Construcción',this)">Construcción</button>
+    </div>
+
+    <div class="prod-list" id="prodList"></div>
+  </div>
+</section>
+
+<!-- NO ENCONTRAS -->
+<section class="noencontras">
+  <div class="section-number" style="margin-bottom:16px;">05 — Atención personalizada</div>
+  <h2>¿No lo<br>encontrás?</h2>
+  <p>Envianos el link de cualquier tienda y lo gestionamos. Si no existe en internet, lo buscamos nosotros.</p>
+  <div class="manual-cards">
+    <div class="mc">
+      <div class="mc-num">01</div>
+      <span class="mc-icon">🔗</span>
+      <div class="mc-title">Enviá el link</div>
+      <p class="mc-desc">Compartí el link del producto desde cualquier tienda online.</p>
+    </div>
+    <div class="mc">
+      <div class="mc-num">02</div>
+      <span class="mc-icon">💬</span>
+      <div class="mc-title">Te cotizamos</div>
+      <p class="mc-desc">Te respondemos rápido con el precio final y el tiempo de entrega.</p>
+    </div>
+    <div class="mc">
+      <div class="mc-num">03</div>
+      <span class="mc-icon">🏠</span>
+      <div class="mc-title">Llega a tu puerta</div>
+      <p class="mc-desc">Gestionamos todo y te entregamos sin que muevas un dedo.</p>
+    </div>
+  </div>
+  <div class="link-field">
+    <input type="url" id="linkExt" placeholder="https://www.mercadolibre.com.ar/...">
+    <button onclick="enviarLink()">💬 Enviar</button>
+  </div>
+  <a href="https://wa.me/5492995514460" class="btn-hero-primary" target="_blank" style="display:inline-flex;margin-top:16px;">💬 Escribir por WhatsApp</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <h3>Ferretería<br>Don Miguel.</h3>
+      <p>El negocio de barrio de siempre, ahora también online. Desde 1987 construyendo confianza con nuestros vecinos.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Productos</h4>
+        <a href="#">Herramientas</a>
+        <a href="#">Electricidad</a>
+        <a href="#">Plomería</a>
+        <a href="#">Pintura</a>
+        <a href="#">Construcción</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <a href="https://wa.me/5492995514460" target="_blank">WhatsApp</a>
+        <a href="#">Instagram</a>
+        <a href="#">Facebook</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Ferretería Don Miguel · Todos los derechos reservados</p>
+    <p>Hecho con ❤️ · <a href="https://wa.me/5492995162152">Contactar</a></p>
+  </div>
+</footer>
+
+<!-- OVERLAY + CARRITO -->
+<div class="overlay" id="overlay" onclick="cerrarCarrito()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cd-head">
+    <h2>Carrito</h2>
+    <button class="cd-close" onclick="cerrarCarrito()">✕</button>
+  </div>
+  <div class="cd-items" id="cdItems">
+    <div class="cd-empty"><div class="bi">🛒</div><p>Tu carrito está vacío</p></div>
+  </div>
+  <div class="cd-foot" id="cdFoot" style="display:none;">
+    <div class="cd-row"><span>Subtotal</span><span id="cdSub">$0</span></div>
+    <div class="cd-row com"><span>+ Comisión gestión</span><span id="cdCom">$0</span></div>
+    <div class="cd-total"><span>Total</span><span id="cdTot">$0</span></div>
+    <button class="cd-checkout" onclick="abrirModal()">Continuar al pago →</button>
+    <button class="cd-wsp" onclick="consultarWsp()">💬 Consultar por WhatsApp</button>
+  </div>
+</div>
+
+<!-- MODAL PAGO -->
+<div class="modal-ov" id="modalOv">
+  <div class="modal-box">
+    <div class="mb-head">
+      <h2 id="modTit">Completar pedido</h2>
+      <button class="cd-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="mb-steps">
+      <div class="mb-step on" id="ms1"><div class="mb-snum">1</div><div class="mb-slabel">Pago</div></div>
+      <div class="mb-step" id="ms2"><div class="mb-snum">2</div><div class="mb-slabel">Envío</div></div>
+      <div class="mb-step" id="ms3"><div class="mb-snum">3</div><div class="mb-slabel">Listo</div></div>
+    </div>
+    <div class="mb-body" id="mb1">
+      <div class="monto-blk"><div class="ml">Total a transferir</div><div class="mv" id="mvMonto">$0</div></div>
+      <div class="cbu-blk">
+        <div class="cl">CBU</div>
+        <div class="cn" id="cnNum">0070738330004002164453</div>
+        <div class="ca">Alias: <strong>JOAQUINAVILAAHORRO</strong></div>
+        <button class="btn-copy" onclick="copiarCBU()">📋 Copiar CBU</button>
+      </div>
+      <div class="aviso-blk">⚠️ Realizá la transferencia, luego completá tus datos y subí el comprobante.</div>
+      <div class="res-blk">
+        <h4>Detalle</h4>
+        <div id="resItems"></div>
+        <div class="res-total"><span>Total</span><span id="resTot">$0</span></div>
+      </div>
+    </div>
+    <div class="mb-body" id="mb2" style="display:none;">
+      <div class="fg-row">
+        <div class="fg"><label>Nombre *</label><input type="text" id="fN" placeholder="Juan Pérez"></div>
+        <div class="fg"><label>Teléfono *</label><input type="tel" id="fT" placeholder="+54 9 299..."></div>
+      </div>
+      <div class="fg"><label>Dirección *</label><input type="text" id="fD" placeholder="Av. San Martín 1245"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Ciudad *</label><input type="text" id="fC" placeholder="Cipolletti"></div>
+        <div class="fg"><label>CP</label><input type="text" id="fP" placeholder="8324"></div>
+      </div>
+      <div class="fg"><label>Observaciones</label><textarea id="fO" placeholder="Piso, depto, referencias..."></textarea></div>
+      <div class="fg">
+        <label>Comprobante *</label>
+        <div class="upload-blk">
+          <input type="file" accept="image/*,.pdf" onchange="prevUp(event)">
+          <div class="ui">📎</div>
+          <p>Captura de la transferencia</p>
+          <div class="uh">JPG, PNG o PDF</div>
+          <img id="upPrev" class="upload-prev">
+        </div>
+      </div>
+    </div>
+    <div class="mb-body" id="mb3" style="display:none;">
+      <div class="confirm-blk">
+        <div class="confirm-circle">✅</div>
+        <h3>¡Pedido<br>recibido!</h3>
+        <p>Tu pedido fue enviado a nuestro WhatsApp. Te contactamos a la brevedad para confirmar y coordinar la entrega.</p>
+        <div class="confirm-wsp" id="confWsp"></div>
+        <div class="confirm-date"><div class="dl">📅 Fecha estimada</div><div class="dv" id="confFecha">—</div></div>
+      </div>
+    </div>
+    <div class="mb-foot" id="mbFoot">
+      <button class="btn-msec" id="btnSec">Cancelar</button>
+      <button class="btn-mpri" id="btnPri">Ya transferí → Datos</button>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/5492995514460" class="wsp-btn" target="_blank">💬</a>
+
+<script>
+/* ============================================================
+   3D CANVAS — partículas flotantes + líneas conectoras
+============================================================ */
+(function(){
+  var c=document.getElementById('world');
+  var ctx=c.getContext('2d');
+  var W,H,pts=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize);
+
+  for(var i=0;i<80;i++){
+    pts.push({
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*.25, vy:(Math.random()-.5)*.25,
+      r:Math.random()*1.2+.3,
+      a:Math.random()*.3+.05,
+      col:Math.random()>.75?'255,77,0':'242,239,232'
+    });
+  }
+
+  var mx=-9999,my=-9999;
+  document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Actualizar y dibujar partículas
+    pts.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba('+p.col+','+p.a+')';
+      ctx.fill();
+    });
+
+    // Líneas entre partículas cercanas
+    for(var i=0;i<pts.length;i++){
+      for(var j=i+1;j<pts.length;j++){
+        var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<140){
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle='rgba(242,239,232,'+(0.04*(1-dist/140))+')';
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================================================
+   CONFIG & DATOS
+============================================================ */
+var CFG={WSP:'5492995514460',CBU:'0070738330004002164453',ALIAS:'JOAQUINAVILAAHORRO',COM:0.10,DIAS:5};
+
+var SVGS={
+  'h001':'<svg viewBox="0 0 100 100" fill="none"><rect x="35" y="8" width="30" height="18" rx="3" fill="#666"/><rect x="40" y="26" width="20" height="12" rx="2" fill="#888"/><rect x="43" y="38" width="14" height="54" rx="4" fill="#7A5C10"/></svg>',
+  'h002':'<svg viewBox="0 0 100 100" fill="none"><rect x="10" y="22" width="80" height="10" rx="2" fill="#666"/><rect x="10" y="38" width="80" height="10" rx="2" fill="#888"/><rect x="10" y="54" width="80" height="10" rx="2" fill="#666"/><rect x="10" y="70" width="80" height="10" rx="2" fill="#888"/></svg>',
+  'h003':'<svg viewBox="0 0 100 100" fill="none"><rect x="44" y="8" width="12" height="6" rx="1" fill="#555"/><rect x="46" y="14" width="8" height="72" rx="2" fill="#8B6914"/><rect x="44" y="84" width="12" height="5" rx="1" fill="#555"/></svg>',
+  'h004':'<svg viewBox="0 0 100 100" fill="none"><path d="M20 22 L80 22 L88 40 L80 58 L20 58 Z" fill="#E53935"/><rect x="15" y="54" width="70" height="8" rx="2" fill="#333"/><rect x="38" y="62" width="24" height="30" rx="2" fill="#E53935"/></svg>',
+  'h005':'<svg viewBox="0 0 100 100" fill="none"><rect x="32" y="22" width="36" height="26" rx="4" fill="#FF4D00"/><rect x="38" y="28" width="24" height="14" rx="2" fill="#FFB800"/><rect x="47" y="48" width="6" height="42" rx="2" fill="#333"/></svg>',
+  'h006':'<svg viewBox="0 0 100 100" fill="none"><rect x="12" y="45" width="76" height="12" rx="3" fill="#777"/><rect x="70" y="36" width="18" height="30" rx="4" fill="#555"/><rect x="12" y="45" width="22" height="12" rx="3" fill="#555"/></svg>',
+  'h007':'<svg viewBox="0 0 100 100" fill="none"><rect x="10" y="46" width="80" height="12" rx="3" fill="#555"/><circle cx="50" cy="52" r="7" fill="white" stroke="#333" stroke-width="2"/><circle cx="50" cy="52" r="3" fill="#00C97A"/></svg>',
+  'e001':'<svg viewBox="0 0 100 100" fill="none"><rect x="28" y="12" width="44" height="56" rx="8" fill="#1565C0"/><rect x="33" y="17" width="34" height="40" rx="5" fill="#1976D2"/><circle cx="50" cy="37" r="12" fill="#0D47A1"/><circle cx="50" cy="37" r="6" fill="#333"/><rect x="44" y="68" width="12" height="22" rx="3" fill="#555"/><rect x="38" y="86" width="24" height="6" rx="2" fill="#444"/></svg>',
+  'e002':'<svg viewBox="0 0 100 100" fill="none"><rect x="22" y="34" width="56" height="30" rx="6" fill="#424242"/><rect x="27" y="39" width="46" height="20" rx="4" fill="#555"/><circle cx="50" cy="49" r="8" fill="#E53935"/><rect x="70" y="42" width="20" height="10" rx="2" fill="#666"/></svg>',
+  'e003':'<svg viewBox="0 0 100 100" fill="none"><rect x="15" y="35" width="70" height="30" rx="5" fill="#37474F"/><rect x="20" y="40" width="60" height="20" rx="3" fill="#546E7A"/><rect x="78" y="42" width="14" height="8" rx="1" fill="#FF4D00"/></svg>',
+  'e004':'<svg viewBox="0 0 100 100" fill="none"><rect x="28" y="14" width="44" height="50" rx="7" fill="#2E7D32"/><rect x="33" y="19" width="34" height="36" rx="5" fill="#388E3C"/><rect x="40" y="64" width="20" height="24" rx="3" fill="#555"/><rect x="35" y="82" width="30" height="8" rx="2" fill="#1565C0"/></svg>',
+  'el001':'<svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="38" fill="none" stroke="#FF6B00" stroke-width="10"/><circle cx="50" cy="50" r="22" fill="none" stroke="#FFB800" stroke-width="7"/><circle cx="50" cy="50" r="8" fill="#FF4D00"/></svg>',
+  'el002':'<svg viewBox="0 0 100 100" fill="none"><rect x="18" y="25" width="64" height="52" rx="4" fill="#F0F0F0" stroke="#CCC" stroke-width="2"/><rect x="28" y="38" width="16" height="24" rx="2" fill="#555"/><rect x="56" y="38" width="16" height="24" rx="2" fill="#555"/></svg>',
+  'el003':'<svg viewBox="0 0 100 100" fill="none"><rect x="12" y="18" width="76" height="64" rx="4" fill="#37474F"/><rect x="17" y="23" width="66" height="54" rx="2" fill="#455A64"/><rect x="22" y="30" width="26" height="18" rx="2" fill="#1565C0"/><rect x="58" y="30" width="26" height="18" rx="2" fill="#E53935"/><rect x="26" y="55" width="48" height="7" rx="2" fill="#FFB800"/></svg>',
+  'el004':'<svg viewBox="0 0 100 100" fill="none"><rect x="20" y="38" width="60" height="24" rx="8" fill="#E53935"/><rect x="23" y="41" width="54" height="18" rx="6" fill="#EF5350"/><rect x="10" y="46" width="12" height="8" rx="2" fill="#555"/><rect x="78" y="46" width="12" height="8" rx="2" fill="#555"/></svg>',
+  'el005':'<svg viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="38" rx="22" ry="28" fill="#FFF9C4" stroke="#FFD600" stroke-width="3"/><rect x="44" y="65" width="12" height="8" rx="1" fill="#BDBDBD"/><rect x="42" y="73" width="16" height="6" rx="2" fill="#9E9E9E"/><path d="M38 38 L50 18 L62 38" fill="#FFD600"/></svg>',
+  'el006':'<svg viewBox="0 0 100 100" fill="none"><rect x="22" y="22" width="56" height="56" rx="4" fill="#F5F5F5" stroke="#CCC" stroke-width="2"/><rect x="36" y="36" width="28" height="28" rx="2" fill="#E0E0E0"/><circle cx="50" cy="50" r="8" fill="white" stroke="#BBB" stroke-width="2"/></svg>',
+  'p001':'<svg viewBox="0 0 100 100" fill="none"><rect x="42" y="8" width="16" height="84" rx="4" fill="#A5D6A7"/><rect x="45" y="8" width="10" height="84" rx="3" fill="#C8E6C9"/><rect x="36" y="12" width="28" height="6" rx="2" fill="#81C784"/><rect x="36" y="82" width="28" height="6" rx="2" fill="#81C784"/></svg>',
+  'p002':'<svg viewBox="0 0 100 100" fill="none"><rect x="38" y="52" width="24" height="38" rx="3" fill="#B0BEC5"/><rect x="34" y="46" width="32" height="10" rx="3" fill="#90A4AE"/><rect x="42" y="36" width="16" height="12" rx="3" fill="#78909C"/><path d="M50 26 Q64 34 64 46" stroke="#90A4AE" stroke-width="7" fill="none" stroke-linecap="round"/></svg>',
+  'p003':'<svg viewBox="0 0 100 100" fill="none"><rect x="18" y="40" width="64" height="22" rx="4" fill="white" stroke="#E0E0E0" stroke-width="2"/><path d="M18 51 Q36 44 50 51 Q64 58 82 51" stroke="#BDBDBD" stroke-width="3" fill="none"/></svg>',
+  'p004':'<svg viewBox="0 0 100 100" fill="none"><rect x="18" y="42" width="64" height="18" rx="4" fill="#78909C"/><rect x="38" y="36" width="24" height="28" rx="3" fill="#607D8B"/><circle cx="50" cy="51" r="7" fill="#455A64"/><rect x="14" y="47" width="12" height="8" rx="2" fill="#546E7A"/><rect x="74" y="47" width="12" height="8" rx="2" fill="#546E7A"/></svg>',
+  'p005':'<svg viewBox="0 0 100 100" fill="none"><path d="M20 52 Q20 26 50 26 Q80 26 80 52" stroke="#B0BEC5" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="20" cy="54" r="8" fill="#90A4AE" stroke="#78909C" stroke-width="2"/><circle cx="80" cy="54" r="8" fill="#90A4AE" stroke="#78909C" stroke-width="2"/></svg>',
+  'pi001':'<svg viewBox="0 0 100 100" fill="none"><rect x="28" y="16" width="44" height="64" rx="5" fill="#FF4D00"/><rect x="33" y="21" width="34" height="54" rx="3" fill="#FF6B35"/><rect x="38" y="26" width="24" height="16" rx="2" fill="rgba(255,255,255,0.25)"/><rect x="24" y="76" width="52" height="12" rx="3" fill="#D84315"/></svg>',
+  'pi002':'<svg viewBox="0 0 100 100" fill="none"><rect x="15" y="40" width="52" height="16" rx="3" fill="#90A4AE"/><rect x="18" y="36" width="46" height="7" rx="2" fill="#78909C"/><rect x="65" y="43" width="24" height="8" rx="2" fill="#546E7A"/><path d="M18 56 Q36 64 54 56" stroke="#9E9E9E" stroke-width="5" fill="none" stroke-linecap="round"/></svg>',
+  'pi003':'<svg viewBox="0 0 100 100" fill="none"><rect x="30" y="18" width="40" height="56" rx="5" fill="#E8E8E8" stroke="#CCC" stroke-width="2"/><rect x="35" y="23" width="30" height="18" rx="2" fill="rgba(255,255,255,0.8)"/><rect x="33" y="45" width="34" height="22" rx="2" fill="#F5F5F5"/><rect x="26" y="70" width="48" height="10" rx="3" fill="#BDBDBD"/></svg>',
+  'pi004':'<svg viewBox="0 0 100 100" fill="none"><rect x="46" y="8" width="8" height="56" rx="3" fill="#8B6914"/><rect x="43" y="64" width="14" height="26" rx="2" fill="#7A5C10"/><path d="M41 64 Q50 72 59 64" fill="#9E9E9E"/></svg>',
+  'f001':'<svg viewBox="0 0 100 100" fill="none"><g transform="rotate(-40 50 50)"><rect x="46" y="10" width="8" height="72" rx="2" fill="#888"/><path d="M43 10 L57 10 L53 26 L47 26 Z" fill="#555"/></g></svg>',
+  'f002':'<svg viewBox="0 0 100 100" fill="none"><rect x="44" y="14" width="12" height="64" rx="3" fill="#90CAF9"/><rect x="40" y="14" width="20" height="10" rx="2" fill="#64B5F6"/><rect x="42" y="72" width="16" height="6" rx="2" fill="#42A5F5"/></svg>',
+  'f003':'<svg viewBox="0 0 100 100" fill="none"><rect x="30" y="18" width="40" height="56" rx="6" fill="#E0E0E0" stroke="#BDBDBD" stroke-width="2"/><rect x="36" y="24" width="28" height="16" rx="2" fill="rgba(255,255,255,0.7)"/><rect x="28" y="70" width="44" height="10" rx="3" fill="#BDBDBD"/><rect x="40" y="12" width="20" height="8" rx="3" fill="#9E9E9E"/></svg>',
+  'f004':'<svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="38" fill="none" stroke="#555" stroke-width="12"/><circle cx="50" cy="50" r="14" fill="#333"/><circle cx="50" cy="50" r="5" fill="#555"/></svg>',
+  's001':'<svg viewBox="0 0 100 100" fill="none"><rect x="28" y="48" width="44" height="44" rx="5" fill="#455A64"/><rect x="33" y="53" width="34" height="36" rx="3" fill="#546E7A"/><path d="M34 48 Q34 20 50 20 Q66 20 66 48" stroke="#607D8B" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="50" cy="68" r="7" fill="#90A4AE"/><rect x="47" y="75" width="6" height="10" rx="2" fill="#90A4AE"/></svg>',
+  's002':'<svg viewBox="0 0 100 100" fill="none"><rect x="18" y="18" width="64" height="64" rx="4" fill="#37474F"/><rect x="23" y="23" width="54" height="54" rx="2" fill="#455A64"/><circle cx="65" cy="50" r="10" fill="#90A4AE"/><circle cx="65" cy="50" r="5" fill="#607D8B"/><rect x="30" y="36" width="22" height="26" rx="2" fill="#546E7A"/></svg>',
+  'c001':'<svg viewBox="0 0 100 100" fill="none"><line x1="30" y1="8" x2="30" y2="92" stroke="#B0BEC5" stroke-width="8" stroke-linecap="round"/><line x1="70" y1="8" x2="70" y2="92" stroke="#B0BEC5" stroke-width="8" stroke-linecap="round"/><rect x="24" y="24" width="52" height="10" rx="2" fill="#90A4AE"/><rect x="24" y="48" width="52" height="10" rx="2" fill="#90A4AE"/><rect x="24" y="70" width="52" height="10" rx="2" fill="#90A4AE"/></svg>',
+  'c002':'<svg viewBox="0 0 100 100" fill="none"><rect x="12" y="44" width="76" height="14" rx="3" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="2"/><rect x="15" y="47" width="70" height="8" rx="2" fill="white"/><path d="M12 51 Q50 46 88 51" stroke="#BDBDBD" stroke-width="2" fill="none"/></svg>',
+  'c003':'<svg viewBox="0 0 100 100" fill="none"><rect x="40" y="12" width="20" height="6" rx="2" fill="#8B6914"/><rect x="44" y="18" width="12" height="58" rx="2" fill="#7A5C10"/><rect x="32" y="73" width="36" height="10" rx="2" fill="#B0BEC5"/></svg>',
+};
+
+var PRODS=[
+  {id:'h001',n:'Martillo carpintero 500g',d:'Mango fibra de vidrio',c:'Herramientas',p:4800},
+  {id:'h002',n:'Set llaves combinadas 12 pzas',d:'Cromo vanadio',c:'Herramientas',p:18500},
+  {id:'h003',n:'Destornillador set 6 piezas',d:'Punta plana y Phillips',c:'Herramientas',p:6200},
+  {id:'h004',n:'Alicate universal 8"',d:'Mango aislado 1000V',c:'Herramientas',p:5400},
+  {id:'h005',n:'Cinta métrica 5m x 19mm',d:'Con freno y clip',c:'Herramientas',p:3200},
+  {id:'h006',n:'Llave inglesa ajustable 10"',d:'Acero cromo',c:'Herramientas',p:7800},
+  {id:'h007',n:'Nivel de burbuja aluminio 60cm',d:'3 burbujas',c:'Herramientas',p:5900},
+  {id:'e001',n:'Taladro percutor 750W',d:'Con maletín y brocas',c:'Herramientas eléctricas',p:87000},
+  {id:'e002',n:'Amoladora angular 115mm 820W',d:'Con disco incluido',c:'Herramientas eléctricas',p:62000},
+  {id:'e003',n:'Sierra caladora 500W',d:'Con hojas incluidas',c:'Herramientas eléctricas',p:54000},
+  {id:'e004',n:'Atornillador inalámbrico 12V',d:'Con batería y cargador',c:'Herramientas eléctricas',p:43000},
+  {id:'el001',n:'Cable duplex 2x2.5mm 100m',d:'Norma IRAM',c:'Electricidad',p:38000},
+  {id:'el002',n:'Tomacorriente doble toma tierra',d:'Norma IRAM',c:'Electricidad',p:2800},
+  {id:'el003',n:'Llave térmica bipolar 20A',d:'Riel DIN',c:'Electricidad',p:8500},
+  {id:'el004',n:'Cinta aisladora 20m',d:'Pack x5',c:'Electricidad',p:3200},
+  {id:'el005',n:'Lámpara LED 12W E27',d:'Pack x10 luz fría',c:'Electricidad',p:14000},
+  {id:'el006',n:'Interruptor simple empotrar',d:'Con placa blanco',c:'Electricidad',p:2100},
+  {id:'p001',n:'Caño PVC 110mm x 3m',d:'Desagüe',c:'Plomería',p:5800},
+  {id:'p002',n:'Canilla monocomando lavatorio',d:'Cromada',c:'Plomería',p:28000},
+  {id:'p003',n:'Teflón 12mm x 10m',d:'Pack x5',c:'Plomería',p:1800},
+  {id:'p004',n:'Llave de paso esfera 1/2"',d:'Cromada',c:'Plomería',p:4200},
+  {id:'p005',n:'Flexible acero inox 40cm',d:'1/2"',c:'Plomería',p:2600},
+  {id:'pi001',n:'Látex interior blanco 4L',d:'Sherwin Williams',c:'Pintura',p:24000},
+  {id:'pi002',n:'Rodillo lana 23cm',d:'Con mango telescópico',c:'Pintura',p:5400},
+  {id:'pi003',n:'Esmalte sintético blanco 1L',d:'',c:'Pintura',p:8200},
+  {id:'pi004',n:'Pincel plano 2"',d:'Cerda natural para látex',c:'Pintura',p:1800},
+  {id:'f001',n:'Tornillos drywall 3.5x25mm',d:'Caja x500',c:'Fijaciones',p:3800},
+  {id:'f002',n:'Tarugo plástico Fischer 6mm',d:'Caja x100',c:'Fijaciones',p:2200},
+  {id:'f003',n:'Siliconado transparente 280ml',d:'Adhesivo sellador',c:'Fijaciones',p:4100},
+  {id:'f004',n:'Disco de corte metal 115mm',d:'Pack x4',c:'Fijaciones',p:3600},
+  {id:'s001',n:'Candado seguridad 60mm',d:'Arco acero templado',c:'Seguridad',p:9800},
+  {id:'s002',n:'Cerradura doble paleta',d:'Para puerta exterior',c:'Seguridad',p:18500},
+  {id:'c001',n:'Escalera aluminio tijera 6p',d:'Capacidad 150kg',c:'Construcción',p:48000},
+  {id:'c002',n:'Cinta juntas drywall 50m',d:'Papel',c:'Construcción',p:2400},
+  {id:'c003',n:'Espátula acero inox 15cm',d:'Mango madera',c:'Construcción',p:3100},
+];
+
+var carrito=[];var paso=1;
+
+/* ---- Carrito badge nav ---- */
+function updBadge(){
+  var tot=carrito.reduce(function(s,i){return s+i.qty;},0);
+  var b=document.getElementById('cartBadge');
+  if(b){b.textContent=tot;b.style.display=tot>0?'inline-flex':'none';}
+}
+
+/* ---- Render catálogo ---- */
+function renderProd(prods){
+  var list=document.getElementById('prodList');list.innerHTML='';
+  prods.forEach(function(item){
+    var pf=Math.round(item.p*(1+CFG.COM));
+    var svg=SVGS[item.id]||'<svg viewBox="0 0 100 100"><text x="50" y="62" text-anchor="middle" font-size="48">🔧</text></svg>';
+    var pd=JSON.stringify({id:item.id,n:item.n,img:item.id,pML:item.p,pF:pf}).replace(/'/g,"&#39;");
+    var div=document.createElement('div');div.className='prod-item';
+    div.innerHTML=
+      '<div class="pi-img">'+svg+'</div>'+
+      '<div class="pi-cat">'+item.c+'</div>'+
+      '<div class="pi-name">'+item.n+'</div>'+
+      '<div class="pi-desc">'+(item.d||'')+'</div>'+
+      '<div class="pi-bottom">'+
+        '<div class="pi-price">$'+pf.toLocaleString('es-AR')+'</div>'+
+        '<button class="pi-btn" onclick=\'addCartData('+pd+')\'>＋</button>'+
+      '</div>';
+    list.appendChild(div);
+  });
+}
+
+function filtrar(cat,btn){
+  document.querySelectorAll('.cf-btn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  document.getElementById('searchInput').value='';
+  renderProd(cat==='todas'?PRODS:PRODS.filter(function(p){return p.c===cat;}));
+}
+
+function buscar(){
+  var q=document.getElementById('searchInput').value.trim().toLowerCase();
+  if(!q){filtrar('todas',document.querySelector('.cf-btn'));return;}
+  document.querySelectorAll('.cf-btn').forEach(function(b){b.classList.remove('on');});
+  renderProd(PRODS.filter(function(p){return p.n.toLowerCase().includes(q)||p.c.toLowerCase().includes(q)||(p.d&&p.d.toLowerCase().includes(q));}));
+  document.getElementById('catalogo-full').scrollIntoView({behavior:'smooth'});
+}
+
+function buscarQ(q){
+  document.getElementById('searchInput').value=q;
+  buscar();
+}
+
+document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')buscar();});
+renderProd(PRODS);
+
+/* ---- Agregar al carrito ---- */
+function addCartData(p){
+  var ex=carrito.find(function(i){return i.id===p.id;});
+  if(ex){ex.qty++;}else{carrito.push({id:p.id,n:p.n,img:p.id,pML:p.pML,pF:p.pF,qty:1});}
+  updCart();updBadge();
+  toast('"'+p.n.substring(0,24)+'..." agregado');
+}
+
+function addCartById(id){
+  var item=PRODS.find(function(x){return x.id===id;});
+  if(!item)return;
+  var pf=Math.round(item.p*(1+CFG.COM));
+  addCartData({id:item.id,n:item.n,img:item.id,pML:item.p,pF:pf});
+}
+
+/* ---- Carrito drawer ---- */
+function updCart(){
+  var items=document.getElementById('cdItems');
+  var foot=document.getElementById('cdFoot');
+  if(!carrito.length){items.innerHTML='<div class="cd-empty"><div class="bi">🛒</div><p>Tu carrito está vacío</p></div>';foot.style.display='none';return;}
+  foot.style.display='block';
+  items.innerHTML=carrito.map(function(i){
+    var svg=SVGS[i.id]||'🔧';
+    return '<div class="cd-item"><div class="cd-item-img">'+svg+'</div><div class="cd-item-info"><div class="cd-item-name">'+i.n+'</div><div class="cd-item-price">$'+(i.pF*i.qty).toLocaleString('es-AR')+'</div><div class="cd-ctrl"><button class="cc-btn" onclick="chgQty(\''+i.id+'\',-1)">−</button><span class="cc-qty">'+i.qty+'</span><button class="cc-btn" onclick="chgQty(\''+i.id+'\',1)">+</button><button class="cc-del" onclick="delItem(\''+i.id+'\')">🗑</button></div></div></div>';
+  }).join('');
+  var sub=carrito.reduce(function(s,i){return s+(i.pML*i.qty);},0);
+  var com=carrito.reduce(function(s,i){return s+((i.pF-i.pML)*i.qty);},0);
+  var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
+  document.getElementById('cdSub').textContent='$'+Math.round(sub).toLocaleString('es-AR');
+  document.getElementById('cdCom').textContent='+$'+Math.round(com).toLocaleString('es-AR');
+  document.getElementById('cdTot').textContent='$'+Math.round(tot).toLocaleString('es-AR');
+}
+
+function chgQty(id,d){var i=carrito.find(function(x){return x.id===id;});if(!i)return;i.qty+=d;if(i.qty<=0)carrito=carrito.filter(function(x){return x.id!==id;});updCart();updBadge();}
+function delItem(id){carrito=carrito.filter(function(x){return x.id!==id;});updCart();updBadge();}
+function abrirCarrito(){document.getElementById('cartDrawer').classList.add('open');document.getElementById('overlay').classList.add('on');}
+function cerrarCarrito(){document.getElementById('cartDrawer').classList.remove('open');document.getElementById('overlay').classList.remove('on');}
+
+function consultarWsp(){
+  var items=carrito.map(function(i){return '• '+i.n+' x'+i.qty;}).join('\n');
+  var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent('Hola! Quiero consultar sobre este pedido:\n\n'+items+'\n\nTotal estimado: $'+Math.round(tot).toLocaleString('es-AR')),'_blank');
+}
+
+/* ---- Modal pago ---- */
+function abrirModal(){
+  cerrarCarrito();paso=1;rndrPaso();
+  document.getElementById('modalOv').classList.add('on');
+  var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
+  document.getElementById('mvMonto').textContent='$'+Math.round(tot).toLocaleString('es-AR');
+  document.getElementById('cnNum').textContent=CFG.CBU;
+  document.getElementById('resItems').innerHTML=carrito.map(function(i){return '<div class="res-line"><span>'+i.n.substring(0,28)+'... x'+i.qty+'</span><span>$'+(i.pF*i.qty).toLocaleString('es-AR')+'</span></div>';}).join('');
+  document.getElementById('resTot').textContent='$'+Math.round(tot).toLocaleString('es-AR');
+}
+
+function cerrarModal(){document.getElementById('modalOv').classList.remove('on');}
+
+function rndrPaso(){
+  [1,2,3].forEach(function(n){var el=document.getElementById('ms'+n);el.className='mb-step';if(n<paso)el.classList.add('done');else if(n===paso)el.classList.add('on');});
+  document.getElementById('mb1').style.display=paso===1?'block':'none';
+  document.getElementById('mb2').style.display=paso===2?'block':'none';
+  document.getElementById('mb3').style.display=paso===3?'block':'none';
+  var bs=document.getElementById('btnSec');var bp=document.getElementById('btnPri');
+  if(paso===1){bs.textContent='Cancelar';bs.onclick=cerrarModal;bp.textContent='Ya transferí → Datos';bp.className='btn-mpri';bp.onclick=function(){paso++;rndrPaso();};}
+  else if(paso===2){bs.textContent='← Volver';bs.onclick=function(){paso--;rndrPaso();};bp.textContent='📱 Enviar por WhatsApp';bp.className='btn-mpri verde';bp.onclick=enviarPed;}
+  else{document.getElementById('mbFoot').style.display='none';}
+  document.getElementById('modTit').textContent=['','PASO 1: PAGO','PASO 2: ENVÍO','CONFIRMADO'][paso];
+}
+
+function copiarCBU(){navigator.clipboard.writeText(CFG.CBU).then(function(){toast('CBU copiado ✅');});}
+function prevUp(e){var f=e.target.files[0];if(!f)return;var p=document.getElementById('upPrev');if(f.type.startsWith('image/')){var r=new FileReader();r.onload=function(ev){p.src=ev.target.result;p.style.display='block';};r.readAsDataURL(f);}else{document.querySelector('.upload-blk p').textContent='📄 '+f.name;}}
+
+function valForm(){
+  var ff=['fN','fT','fD','fC'];
+  for(var i=0;i<ff.length;i++){var el=document.getElementById(ff[i]);if(!el.value.trim()){el.style.borderColor='rgba(255,77,0,0.6)';el.focus();toast('⚠️ Completá todos los campos');setTimeout(function(e){return function(){e.style.borderColor='rgba(242,239,232,0.07)';};}(el),2000);return false;}}
+  return true;
+}
+
+function enviarPed(){
+  if(!valForm())return;
+  var n=document.getElementById('fN').value,t=document.getElementById('fT').value,d=document.getElementById('fD').value,ci=document.getElementById('fC').value,cp=document.getElementById('fP').value,ob=document.getElementById('fO').value;
+  var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
+  var tML=carrito.reduce(function(s,i){return s+(i.pML*i.qty);},0);
+  var items=carrito.map(function(i){return '• '+i.n+' x'+i.qty+' = $'+(i.pF*i.qty).toLocaleString('es-AR');}).join('\n');
+  var fa=new Date();fa.setDate(fa.getDate()+CFG.DIAS);
+  var fs=fa.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  var msg='🔧 *PEDIDO — Ferretería Don Miguel*\n━━━━━━━━━━━━━━━━\n👤 '+n+'\n📞 '+t+'\n📍 '+d+', '+ci+(cp?' CP '+cp:'')+'\n'+(ob?'📝 '+ob+'\n':'')+'━━━━━━━━━━━━━━━━\n'+items+'\n━━━━━━━━━━━━━━━━\n💵 *Total: $'+Math.round(tot).toLocaleString('es-AR')+'*\n📅 Entrega estimada: '+fs+'\n⚠️ Adjuntar comprobante';
+  document.getElementById('confWsp').innerHTML=msg.replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>');
+  document.getElementById('confFecha').textContent='≈ '+fs+' ('+CFG.DIAS+' días hábiles)';
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
+  paso=3;rndrPaso();
+  setTimeout(function(){carrito=[];updCart();updBadge();},1000);
+}
+
+function enviarLink(){
+  var l=document.getElementById('linkExt').value.trim();
+  if(!l){toast('⚠️ Pegá el link del producto primero');return;}
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent('Hola Don Miguel! Quiero que me gestionen este producto:\n\n'+l+'\n\n¿Me pueden cotizar con entrega a domicilio?'),'_blank');
+}
+
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+document.getElementById('modalOv').addEventListener('click',function(e){if(e.target===document.getElementById('modalOv'))cerrarModal();});
+</script>
+</body>
+</html>
