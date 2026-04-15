@@ -1332,13 +1332,15 @@ function parseCSV(text) {
     }
     return -1;
   }
-  var iNombre  = col(['nombre']);         if(iNombre<0)  iNombre=0;
-  var iDesc    = col(['desc','descrip']);  if(iDesc<0)    iDesc=1;
-  var iCat     = col(['categ']);           if(iCat<0)     iCat=2;
-  var iPrecio  = col(['precio','price']);  if(iPrecio<0)  iPrecio=3;
-  var iStock   = col(['stock']);           if(iStock<0)   iStock=4;
-  var iUnidad  = col(['unidad']);          if(iUnidad<0)  iUnidad=5;
-  var iImagen  = col(['imagen','image','img','url','foto']);
+  var iNombre   = col(['nombre']);                        if(iNombre<0)   iNombre=0;
+  var iCodigo   = col(['cód','cod','codigo','code']);     if(iCodigo<0)   iCodigo=1;
+  var iDesc     = col(['desc','descrip']);                if(iDesc<0)     iDesc=2;
+  var iProv     = col(['proveedor','prov','supplier']);   if(iProv<0)     iProv=3;
+  var iPrecio   = col(['precio','price']);                if(iPrecio<0)   iPrecio=4;
+  var iStock    = col(['stock']);                         if(iStock<0)    iStock=5;
+  var iUnidad   = col(['unidad']);                        if(iUnidad<0)   iUnidad=6;
+  var iImagen   = col(['imagen','image','img','url','foto']);
+  var iCat      = col(['categ']);
 
   var prods = [];
   for(var i=1; i<lines.length; i++){
@@ -1365,17 +1367,19 @@ function parseCSV(text) {
     }
     if(!precio) continue;
 
-    var cat = (cols[iCat]||'Otros').trim();
+    var cat = (iCat>=0 && cols[iCat]) ? cols[iCat].trim() : 'Otros';
     var img = (iImagen>=0 && cols[iImagen]) ? cols[iImagen].trim() : '';
     if(!img || img==='' || img==='undefined') img = IMG_CAT[cat] || IMG_CAT['Otros'];
 
     prods.push({
-      id: 'gs'+i,
-      n:  nombre,
-      d:  (cols[iDesc]||nombre).trim(),
-      c:  cat,
-      p:  precio,
-      img: img
+      id:       'gs'+i,
+      n:        nombre,
+      d:        (cols[iDesc]||nombre).trim(),
+      c:        cat,
+      p:        precio,
+      img:      img,
+      codigo:   (cols[iCodigo]||'').trim(),   // ← código proveedor
+      prov:     (cols[iProv]||'').trim()      // ← proveedor
     });
   }
   return prods;
@@ -1560,9 +1564,9 @@ var SVGS = {
 };
 
 function mkCard(item){
-  var pf = Math.round(item.p * (1 + CFG.COM));
-  if(!pf || pf < 10) pf = Math.round(item.p); // fallback si COM da raro
-  var pd = JSON.stringify({id:item.id, n:item.n, img:item.img, pML:item.p, pF:pf}).replace(/'/g,"&#39;");
+  // Precio proveedor s/IVA × 1.7 = precio final al cliente
+  var pf = Math.round(item.p * 1.7);
+  var pd = JSON.stringify({id:item.id, n:item.n, img:item.img, pML:item.p, pF:pf, codigo:item.codigo||'', prov:item.prov||''}).replace(/'/g,"&#39;");
 
   // Imagen: usar URL real si existe, sino fallback por categoría
   var imgHtml;
@@ -1659,7 +1663,7 @@ cargarDesdeSheets();
 /* ===== CARRITO ===== */
 function addCart(p,btn){
   var ex=carrito.find(function(i){return i.id===p.id;});
-  if(ex){ex.qty++;}else{carrito.push({id:p.id,n:p.n,img:p.img,pML:p.pML,pF:p.pF,qty:1});}
+  if(ex){ex.qty++;}else{carrito.push({id:p.id,n:p.n,img:p.img,pML:p.pML,pF:p.pF,qty:1,codigo:p.codigo||'',prov:p.prov||''});}
   updCart();
   btn.innerHTML='<span>✅ Agregado</span>';btn.classList.add('agregado');
   setTimeout(function(){btn.innerHTML='<span>🛒 Agregar al carrito</span>';btn.classList.remove('agregado');},1800);
@@ -1679,7 +1683,7 @@ function rndrCart(){
   if(!carrito.length){items.innerHTML='<div class="cp-empty"><div class="big">🛒</div><p>Tu carrito está vacío</p></div>';foot.style.display='none';return;}
   foot.style.display='block';
   items.innerHTML=carrito.map(function(i){
-    return '<div class="cp-item"><div class="cp-item-img">'+i.img+'</div><div class="cp-item-info"><div class="cp-item-name">'+i.n+'</div><div class="cp-item-price">$'+(i.pF*i.qty).toLocaleString('es-AR')+'</div><div class="cp-ctrl"><button class="ctrl-b" onclick="chgQty(\''+i.id+'\',-1)">−</button><span class="ctrl-q">'+i.qty+'</span><button class="ctrl-b" onclick="chgQty(\''+i.id+'\',1)">+</button><button class="ctrl-del" onclick="delItem(\''+i.id+'\')">🗑</button></div></div></div>';
+    return '<div class="cp-item"><div class="cp-item-img"><img src="'+i.img+'" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div><div class="cp-item-info"><div class="cp-item-name">'+i.n+'</div><div class="cp-item-price">$'+(i.pF*i.qty).toLocaleString('es-AR')+'</div><div class="cp-ctrl"><button class="ctrl-b" onclick="chgQty(\''+i.id+'\',-1)">−</button><span class="ctrl-q">'+i.qty+'</span><button class="ctrl-b" onclick="chgQty(\''+i.id+'\',1)">+</button><button class="ctrl-del" onclick="delItem(\''+i.id+'\')">🗑</button></div></div></div>';
   }).join('');
 }
 
@@ -1739,15 +1743,58 @@ function valForm(){
 
 function enviarPed(){
   if(!valForm())return;
-  var n=document.getElementById('fN').value;var t=document.getElementById('fT').value;var d=document.getElementById('fD').value;var ci=document.getElementById('fC').value;var cp=document.getElementById('fP').value;var ob=document.getElementById('fO').value;
+  var n=document.getElementById('fN').value;
+  var t=document.getElementById('fT').value;
+  var d=document.getElementById('fD').value;
+  var ci=document.getElementById('fC').value;
+  var cp=document.getElementById('fP').value;
+  var ob=document.getElementById('fO').value;
   var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
-  var tML=carrito.reduce(function(s,i){return s+(i.pML*i.qty);},0);
-  var com=tot-tML;
-  var items=carrito.map(function(i){return '• '+i.n+' x'+i.qty+' = $'+(i.pF*i.qty).toLocaleString('es-AR');}).join('\n');
   var fa=new Date();fa.setDate(fa.getDate()+CFG.DIAS);
   var fs=fa.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-  var msg='🔧 *NUEVO PEDIDO - Ferretería Don Miguel*\n━━━━━━━━━━━━━━━━━━━━━\n👤 *Cliente:* '+n+'\n📞 *Teléfono:* '+t+'\n📍 *Dirección:* '+d+', '+ci+(cp?' (CP '+cp+')':'')+'\n'+(ob?'📝 *Obs:* '+ob+'\n':'')+'━━━━━━━━━━━━━━━━━━━━━\n🛒 *PRODUCTOS:*\n'+items+'\n━━━━━━━━━━━━━━━━━━━━━\n💰 Precio base: $'+Math.round(tML).toLocaleString('es-AR')+'\n✅ Comisión: $'+Math.round(com).toLocaleString('es-AR')+'\n💵 *TOTAL: $'+Math.round(tot).toLocaleString('es-AR')+'*\n📅 Arribo estimado: '+fs+'\n━━━━━━━━━━━━━━━━━━━━━\n⚠️ *Verificar comprobante adjunto*';
-  document.getElementById('confWsp').innerHTML=msg.replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>');
+
+  // ===== MENSAJE CLIENTE (limpio — sin código ni proveedor) =====
+  var itemsCliente = carrito.map(function(i){
+    return '• '+i.n+' x'+i.qty+' = $'+(i.pF*i.qty).toLocaleString('es-AR');
+  }).join('\n');
+
+  // ===== MENSAJE ADMIN (discriminado por proveedor con código) =====
+  var grupos = {};
+  carrito.forEach(function(i){
+    var prov = i.prov || 'Sin proveedor';
+    if(!grupos[prov]) grupos[prov] = [];
+    grupos[prov].push(i);
+  });
+
+  var itemsAdmin = '';
+  var provEmoji = { 'Distribuidora Austral':'🔵', 'Don Antonio':'🟡' };
+  Object.keys(grupos).forEach(function(prov){
+    var emoji = provEmoji[prov] || '⚪';
+    itemsAdmin += emoji+' *'+prov.toUpperCase()+'*\n';
+    grupos[prov].forEach(function(i){
+      var cod = i.codigo ? '['+i.codigo+'] ' : '';
+      itemsAdmin += '  • '+cod+i.n+' x'+i.qty+' = $'+(i.pF*i.qty).toLocaleString('es-AR')+'\n';
+    });
+    var subtotal = grupos[prov].reduce(function(s,i){return s+(i.pF*i.qty);},0);
+    itemsAdmin += '  Subtotal '+prov+': $'+subtotal.toLocaleString('es-AR')+'\n\n';
+  });
+
+  var msg='🔧 *NUEVO PEDIDO - Ferretería Don Miguel*\n'
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'👤 *Cliente:* '+n+'\n'
+    +'📞 *Teléfono:* '+t+'\n'
+    +'📍 *Dirección:* '+d+', '+ci+(cp?' (CP '+cp+')':'')+'\n'
+    +(ob?'📝 *Obs:* '+ob+'\n':'')
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'🛒 *PRODUCTOS POR PROVEEDOR:*\n\n'
+    +itemsAdmin
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'💵 *TOTAL: $'+Math.round(tot).toLocaleString('es-AR')+'*\n'
+    +'📅 Arribo estimado: '+fs+'\n'
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'⚠️ *Verificar comprobante adjunto*';
+
+  document.getElementById('confWsp').innerHTML=itemsCliente.replace(/\n/g,'<br>');
   document.getElementById('confFecha').textContent='≈ '+fs+' ('+CFG.DIAS+' días hábiles)';
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
   paso=3;rndrPaso();
