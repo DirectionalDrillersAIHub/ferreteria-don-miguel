@@ -1320,82 +1320,39 @@ var IMG_CAT = {
 
 function parseCSV(text) {
   var lines = text.split('\n');
-  if(lines.length < 5) return [];
+  if(lines.length < 10) return [];
 
-  // Buscar la fila de encabezados reales (tiene "CÓDIGO" o "Nombre" o "DESCRIPCIÓN")
-  var headerIdx = 0;
-  for(var h=0; h<Math.min(8, lines.length); h++){
-    var row = lines[h].toLowerCase();
-    if(row.includes('código') || row.includes('codigo') || row.includes('descripci') || row.includes('nombre')){
-      headerIdx = h;
+  // Buscar la primera línea de datos reales
+  // Una línea de dato tiene: col0=número, col1=código, col6=precio con $
+  var dataStart = -1;
+  for(var i=0; i<lines.length; i++){
+    var cols = parseLine(lines[i]);
+    if(cols.length >= 7 && !isNaN(parseInt(cols[0])) && cols[6] && cols[6].indexOf('$') >= 0){
+      dataStart = i;
       break;
     }
   }
+  if(dataStart < 0) return [];
 
-  // Parsear fila de encabezados
-  var headers = parseLine(lines[headerIdx]).map(function(h){ return h.toLowerCase().trim(); });
-
-  function col(keys){
-    for(var k=0; k<keys.length; k++){
-      for(var j=0; j<headers.length; j++){
-        if(headers[j].includes(keys[k])) return j;
-      }
-    }
-    return -1;
-  }
-
-  // Columnas del sheet completo:
-  // A=#, B=Código, C=Descripción, D=Proveedor, E=Precio s/IVA, F=Precio c/IVA, G=Precio Tienda x1.7, H=Stock, I=Unidad, J=Imagen, K=Categoría
-  var iCodigo  = col(['código','codigo','cod']);    if(iCodigo<0)  iCodigo=1;
-  var iDesc    = col(['descripci','nombre']);        if(iDesc<0)    iDesc=2;
-  var iProv    = col(['proveedor','prov']);          if(iProv<0)    iProv=3;
-  var iPrecio  = col(['tienda','x1.7','x1,7','precio tienda']); // columna G — precio final
-  if(iPrecio<0) iPrecio = col(['precio']);          if(iPrecio<0)  iPrecio=6;
-  var iStock   = col(['stock']);                    if(iStock<0)   iStock=7;
-  var iUnidad  = col(['unidad']);                   if(iUnidad<0)  iUnidad=8;
-  var iImagen  = col(['imagen','image','url','foto']); if(iImagen<0) iImagen=9;
-  var iCat     = col(['categ']);                    if(iCat<0)     iCat=10;
-
-  // Datos desde headerIdx+2 (saltamos la fila de subtítulos también)
-  var dataStart = headerIdx + 2;
-
+  // Columnas fijas:
+  // 0=#, 1=Código, 2=Descripción, 3=Proveedor, 4=PrecioSinIVA, 5=PrecioConIVA, 6=PrecioTienda(x1.7), 7=Stock, 8=Unidad, 9=ImagenURL, 10=Categoría
   var prods = [];
   for(var i=dataStart; i<lines.length; i++){
     var line = lines[i].trim();
     if(!line) continue;
-
     var cols = parseLine(line);
-    if(cols.length < 4) continue;
+    if(cols.length < 7) continue;
 
-    var desc = (cols[iDesc]||'').trim();
-    if(!desc || desc==='' || desc.toLowerCase().includes('descripci')) continue;
+    var desc = (cols[2]||'').trim();
+    if(!desc) continue;
 
-    // Precio de la columna Tienda x1.7 — formato argentino $38.585,94
-    var precio = 0;
-    var precioStr = (cols[iPrecio]||'').trim();
-    // Quitar $ y espacios
-    precioStr = precioStr.replace(/\$/g,'').replace(/\s/g,'').trim();
-    // Formato argentino: punto=miles, coma=decimal → convertir a JS
-    if(precioStr.includes(',') && precioStr.includes('.')){
-      // Tiene ambos: 38.585,94 → quitar puntos, cambiar coma por punto
-      precioStr = precioStr.replace(/\./g,'').replace(',','.');
-    } else if(precioStr.includes(',') && !precioStr.includes('.')){
-      // Solo coma: puede ser decimal → 38585,94
-      precioStr = precioStr.replace(',','.');
-    } else if(precioStr.includes('.')){
-      // Solo punto: puede ser miles o decimal
-      var partes = precioStr.split('.');
-      if(partes[partes.length-1].length === 3){
-        // Es separador de miles: 38.585 → 38585
-        precioStr = precioStr.replace(/\./g,'');
-      }
-      // Si no, ya está en formato JS
-    }
-    precio = parseFloat(precioStr);
+    // Precio columna 6 — formato $862.97 (punto decimal, sin coma)
+    var precioStr = (cols[6]||'').replace(/\$/g,'').replace(/\s/g,'').trim();
+    var precio = parseFloat(precioStr);
     if(!precio || precio <= 0) continue;
 
-    var cat = (cols[iCat]||'Otros').trim() || 'Otros';
-    var img = (iImagen>=0 && cols[iImagen]) ? cols[iImagen].trim() : '';
+    var cat = (cols[10]||'Otros').trim() || 'Otros';
+    var img = (cols[9]||'').trim();
     if(!img) img = IMG_CAT[cat] || IMG_CAT['Otros'];
 
     prods.push({
@@ -1405,8 +1362,8 @@ function parseCSV(text) {
       c:      cat,
       p:      precio,
       img:    img,
-      codigo: (cols[iCodigo]||'').trim(),
-      prov:   (cols[iProv]||'').trim()
+      codigo: (cols[1]||'').trim(),
+      prov:   (cols[3]||'').trim()
     });
   }
   return prods;
