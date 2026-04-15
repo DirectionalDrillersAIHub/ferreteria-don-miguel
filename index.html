@@ -1370,9 +1370,27 @@ function parseCSV(text) {
     var desc = (cols[iDesc]||'').trim();
     if(!desc || desc==='' || desc.toLowerCase().includes('descripci')) continue;
 
-    // Precio de la columna Tienda x1.7
+    // Precio de la columna Tienda x1.7 — formato argentino $38.585,94
     var precio = 0;
-    var precioStr = (cols[iPrecio]||'').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
+    var precioStr = (cols[iPrecio]||'').trim();
+    // Quitar $ y espacios
+    precioStr = precioStr.replace(/\$/g,'').replace(/\s/g,'').trim();
+    // Formato argentino: punto=miles, coma=decimal → convertir a JS
+    if(precioStr.includes(',') && precioStr.includes('.')){
+      // Tiene ambos: 38.585,94 → quitar puntos, cambiar coma por punto
+      precioStr = precioStr.replace(/\./g,'').replace(',','.');
+    } else if(precioStr.includes(',') && !precioStr.includes('.')){
+      // Solo coma: puede ser decimal → 38585,94
+      precioStr = precioStr.replace(',','.');
+    } else if(precioStr.includes('.')){
+      // Solo punto: puede ser miles o decimal
+      var partes = precioStr.split('.');
+      if(partes[partes.length-1].length === 3){
+        // Es separador de miles: 38.585 → 38585
+        precioStr = precioStr.replace(/\./g,'');
+      }
+      // Si no, ya está en formato JS
+    }
     precio = parseFloat(precioStr);
     if(!precio || precio <= 0) continue;
 
