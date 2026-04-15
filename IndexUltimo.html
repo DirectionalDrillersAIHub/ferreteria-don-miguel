@@ -1180,124 +1180,45 @@ drawParticles();
 var CFG={WSP:'5492995162152',CBU:'0070738330004002164453',ALIAS:'JOAQUINAVILAAHORRO',COM:0.10,DIAS:5};
 var CATS=[{id:'Herramientas',icon:'🔨',sub:'Herramientas manuales · Disponibles en stock'},{id:'Herramientas eléctricas',icon:'⚡',sub:'Taladros, amoladoras y más'},{id:'Electricidad',icon:'🔌',sub:'Cables, llaves, tomacorrientes'},{id:'Plomería',icon:'🚿',sub:'Caños, canillas, conexiones'},{id:'Pintura',icon:'🎨',sub:'Látex, esmaltes, rodillos'},{id:'Fijaciones',icon:'🪛',sub:'Tornillos, tarugos, adhesivos'},{id:'Seguridad',icon:'🔒',sub:'Candados, cerraduras'},{id:'Construcción',icon:'🏗️',sub:'Escaleras, espátulas, cintas'}];
 var IMAP={'Herramientas':'🔨','Herramientas eléctricas':'⚡','Electricidad':'🔌','Plomería':'🚿','Pintura':'🎨','Fijaciones':'🪛','Seguridad':'🔒','Construcción':'🏗️'};
-var SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2OwGI5PEWgaxWEyWExPAXAToKWbkxNVBgrJBkNUXF4tHOGV2iNzz230UHEF0XBJf7VSTzTiaPVfuH/pub?gid=1612898955&single=true&output=csv';
-
-var PRODS = [];
-var carrito=[];var paso=1;
-
-// Imágenes por categoría como fallback
-var IMG_CAT = {
-  'Herramientas eléctricas': 'https://cdn.pixabay.com/photo/2021/03/02/16/06/drill-6062845_640.jpg',
-  'Herramientas':            'https://cdn.pixabay.com/photo/2016/11/23/14/25/hammer-1853309_640.jpg',
-  'Electricidad':            'https://cdn.pixabay.com/photo/2016/04/01/12/24/cable-1300066_640.jpg',
-  'Plomería':                'https://cdn.pixabay.com/photo/2019/09/04/10/42/pipe-4450831_640.jpg',
-  'Pintura':                 'https://cdn.pixabay.com/photo/2016/11/22/19/25/paint-1850613_640.jpg',
-  'Fijaciones':              'https://cdn.pixabay.com/photo/2016/06/28/17/35/screw-1484522_640.jpg',
-  'Seguridad':               'https://cdn.pixabay.com/photo/2017/01/09/10/08/padlock-1964899_640.jpg',
-  'Construcción':            'https://cdn.pixabay.com/photo/2016/11/18/17/42/ladder-1836430_640.jpg',
-  'Otros':                   'https://cdn.pixabay.com/photo/2017/08/01/09/33/wrench-2562425_640.jpg',
-};
-
-function parseCSV(text) {
-  var lines = text.split('\n');
-  if(lines.length < 2) return [];
-
-  // Detectar encabezados
-  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim().toLowerCase(); });
-  function col(keys){
-    for(var k=0; k<keys.length; k++){
-      for(var j=0; j<headers.length; j++){
-        if(headers[j].includes(keys[k])) return j;
-      }
-    }
-    return -1;
-  }
-  var iNombre  = col(['nombre']);         if(iNombre<0)  iNombre=0;
-  var iDesc    = col(['desc','descrip']);  if(iDesc<0)    iDesc=1;
-  var iCat     = col(['categ']);           if(iCat<0)     iCat=2;
-  var iPrecio  = col(['precio','price']);  if(iPrecio<0)  iPrecio=3;
-  var iStock   = col(['stock']);           if(iStock<0)   iStock=4;
-  var iUnidad  = col(['unidad']);          if(iUnidad<0)  iUnidad=5;
-  var iImagen  = col(['imagen','image','img','url','foto']);
-
-  var prods = [];
-  for(var i=1; i<lines.length; i++){
-    var line = lines[i].trim();
-    if(!line) continue;
-
-    // Parsear CSV respetando comillas
-    var cols = [];
-    var cur = ''; var inQ = false;
-    for(var c=0; c<line.length; c++){
-      if(line[c]==='"'){ inQ=!inQ; continue; }
-      if(line[c]===',' && !inQ){ cols.push(cur.trim()); cur=''; continue; }
-      cur += line[c];
-    }
-    cols.push(cur.trim());
-
-    var nombre = (cols[iNombre]||'').trim();
-    if(!nombre || nombre==='#' || nombre==='Nombre') continue;
-
-    var precio = 0;
-    for(var pc=iPrecio; pc<Math.min(cols.length, iPrecio+4); pc++){
-      var pv = parseFloat((cols[pc]||'').replace(/[^0-9.,]/g,'').replace(',','.'));
-      if(pv > 0){ precio = pv; break; }
-    }
-    if(!precio) continue;
-
-    var cat = (cols[iCat]||'Otros').trim();
-    var img = (iImagen>=0 && cols[iImagen]) ? cols[iImagen].trim() : '';
-    if(!img || img==='' || img==='undefined') img = IMG_CAT[cat] || IMG_CAT['Otros'];
-
-    prods.push({
-      id: 'gs'+i,
-      n:  nombre,
-      d:  (cols[iDesc]||nombre).trim(),
-      c:  cat,
-      p:  precio,
-      img: img
-    });
-  }
-  return prods;
-}
-
-function cargarDesdeSheets(){
-  var loading = document.getElementById('loadingOverlay');
-  if(loading) loading.style.display = 'flex';
-
-  fetch(SHEET_CSV)
-    .then(function(r){ return r.text(); })
-    .then(function(text){
-      var prods = parseCSV(text);
-      if(prods.length > 0){
-        PRODS = prods;
-        console.log('✅ Google Sheets: ' + prods.length + ' productos cargados');
-      } else {
-        console.warn('⚠️ Sheet vacío — usando productos de demo');
-        PRODS = PRODS_DEMO;
-      }
-      if(loading) loading.style.display = 'none';
-      renderCat(PRODS, true);
-      renderFiltros();
-    })
-    .catch(function(err){
-      console.warn('⚠️ Error cargando Sheet — usando demo:', err);
-      PRODS = PRODS_DEMO;
-      if(loading) loading.style.display = 'none';
-      renderCat(PRODS, true);
-      renderFiltros();
-    });
-}
-
-// Productos demo como fallback
-var PRODS_DEMO = [
+var PRODS=[
   {id:'h001',n:'Martillo carpintero 500g',d:'Mango fibra de vidrio',c:'Herramientas',p:4800,img:'https://cdn.pixabay.com/photo/2016/11/23/14/25/hammer-1853309_640.jpg'},
   {id:'h002',n:'Set llaves combinadas 12 pzas',d:'Cromo vanadio',c:'Herramientas',p:18500,img:'https://cdn.pixabay.com/photo/2017/08/01/09/33/wrench-2562425_640.jpg'},
+  {id:'h003',n:'Destornillador set 6 piezas',d:'Punta plana y Phillips',c:'Herramientas',p:6200,img:'https://cdn.pixabay.com/photo/2020/09/04/20/16/screwdriver-5545393_640.jpg'},
+  {id:'h004',n:'Alicate universal 8"',d:'Mango aislado 1000V',c:'Herramientas',p:5400,img:'https://cdn.pixabay.com/photo/2019/02/11/19/54/pliers-3990037_640.jpg'},
+  {id:'h005',n:'Cinta métrica 5m x 19mm',d:'Con freno y clip',c:'Herramientas',p:3200,img:'https://cdn.pixabay.com/photo/2017/02/01/09/52/measuring-tape-2029675_640.jpg'},
+  {id:'h006',n:'Llave inglesa ajustable 10"',d:'Acero cromo',c:'Herramientas',p:7800,img:'https://cdn.pixabay.com/photo/2017/08/01/09/33/wrench-2562425_640.jpg'},
+  {id:'h007',n:'Nivel de burbuja aluminio 60cm',d:'3 burbujas',c:'Herramientas',p:5900,img:'https://cdn.pixabay.com/photo/2016/03/31/18/57/level-1294836_640.jpg'},
   {id:'e001',n:'Taladro percutor 750W',d:'Con maletín y brocas',c:'Herramientas eléctricas',p:87000,img:'https://cdn.pixabay.com/photo/2021/03/02/16/06/drill-6062845_640.jpg'},
+  {id:'e002',n:'Amoladora angular 115mm 820W',d:'Con disco incluido',c:'Herramientas eléctricas',p:62000,img:'https://cdn.pixabay.com/photo/2019/12/17/14/08/grinder-4701997_640.jpg'},
+  {id:'e003',n:'Sierra caladora 500W',d:'Con hojas incluidas',c:'Herramientas eléctricas',p:54000,img:'https://cdn.pixabay.com/photo/2017/05/25/15/06/jigsaw-2343440_640.jpg'},
+  {id:'e004',n:'Atornillador inalámbrico 12V',d:'Con batería y cargador',c:'Herramientas eléctricas',p:43000,img:'https://cdn.pixabay.com/photo/2021/03/02/16/06/drill-6062845_640.jpg'},
   {id:'el001',n:'Cable duplex 2x2.5mm rollo 100m',d:'Norma IRAM',c:'Electricidad',p:38000,img:'https://cdn.pixabay.com/photo/2016/04/01/12/24/cable-1300066_640.jpg'},
+  {id:'el002',n:'Tomacorriente doble con toma tierra',d:'Norma IRAM',c:'Electricidad',p:2800,img:'https://cdn.pixabay.com/photo/2020/05/27/08/08/socket-5224484_640.jpg'},
+  {id:'el003',n:'Llave térmica bipolar 20A',d:'Riel DIN',c:'Electricidad',p:8500,img:'https://cdn.pixabay.com/photo/2017/06/14/07/16/electric-2401900_640.jpg'},
+  {id:'el004',n:'Cinta aisladora eléctrica 20m',d:'Pack x5',c:'Electricidad',p:3200,img:'https://cdn.pixabay.com/photo/2016/04/01/12/24/cable-1300066_640.jpg'},
+  {id:'el005',n:'Lámpara LED 12W E27 luz fría',d:'Pack x10',c:'Electricidad',p:14000,img:'https://cdn.pixabay.com/photo/2017/07/31/11/21/lightbulb-2557690_640.jpg'},
+  {id:'el006',n:'Interruptor simple empotrar',d:'Con placa blanco',c:'Electricidad',p:2100,img:'https://cdn.pixabay.com/photo/2020/05/27/08/08/socket-5224484_640.jpg'},
   {id:'p001',n:'Caño PVC 110mm x 3m',d:'Desagüe',c:'Plomería',p:5800,img:'https://cdn.pixabay.com/photo/2019/09/04/10/42/pipe-4450831_640.jpg'},
+  {id:'p002',n:'Canilla monocomando lavatorio',d:'Cromada',c:'Plomería',p:28000,img:'https://cdn.pixabay.com/photo/2017/09/06/18/29/faucet-2722057_640.jpg'},
+  {id:'p003',n:'Teflón cinta blanca 12mm x 10m',d:'Pack x5',c:'Plomería',p:1800,img:'https://cdn.pixabay.com/photo/2019/09/04/10/42/pipe-4450831_640.jpg'},
+  {id:'p004',n:'Llave de paso esfera 1/2"',d:'Cromada',c:'Plomería',p:4200,img:'https://cdn.pixabay.com/photo/2017/09/06/18/29/faucet-2722057_640.jpg'},
+  {id:'p005',n:'Flexible acero inox 1/2" x 40cm',d:'',c:'Plomería',p:2600,img:'https://cdn.pixabay.com/photo/2019/09/04/10/42/pipe-4450831_640.jpg'},
+  {id:'pi001',n:'Látex interior blanco mate 4L',d:'Sherwin Williams',c:'Pintura',p:24000,img:'https://cdn.pixabay.com/photo/2016/11/22/19/25/paint-1850613_640.jpg'},
+  {id:'pi002',n:'Rodillo lana 23cm',d:'Con mango telescópico',c:'Pintura',p:5400,img:'https://cdn.pixabay.com/photo/2018/01/06/09/02/paint-roller-3063817_640.jpg'},
+  {id:'pi003',n:'Pintura esmalte sintético blanco 1L',d:'',c:'Pintura',p:8200,img:'https://cdn.pixabay.com/photo/2016/11/22/19/25/paint-1850613_640.jpg'},
+  {id:'pi004',n:'Pincel plano 2" cerda natural',d:'Para látex',c:'Pintura',p:1800,img:'https://cdn.pixabay.com/photo/2015/09/09/20/42/paintbrush-933085_640.jpg'},
+  {id:'f001',n:'Tornillos drywall 3.5x25mm',d:'Caja x500',c:'Fijaciones',p:3800,img:'https://cdn.pixabay.com/photo/2016/06/28/17/35/screw-1484522_640.jpg'},
+  {id:'f002',n:'Tarugo plástico Fischer 6mm',d:'Caja x100',c:'Fijaciones',p:2200,img:'https://cdn.pixabay.com/photo/2016/06/28/17/35/screw-1484522_640.jpg'},
+  {id:'f003',n:'Siliconado transparente 280ml',d:'Adhesivo sellador',c:'Fijaciones',p:4100,img:'https://cdn.pixabay.com/photo/2019/08/28/10/03/silicone-4436040_640.jpg'},
+  {id:'f004',n:'Disco de corte metal 115mm',d:'Pack x4',c:'Fijaciones',p:3600,img:'https://cdn.pixabay.com/photo/2019/12/17/14/08/grinder-4701997_640.jpg'},
   {id:'s001',n:'Candado seguridad 60mm',d:'Arco acero templado',c:'Seguridad',p:9800,img:'https://cdn.pixabay.com/photo/2017/01/09/10/08/padlock-1964899_640.jpg'},
+  {id:'s002',n:'Cerradura doble paleta',d:'Para puerta exterior',c:'Seguridad',p:18500,img:'https://cdn.pixabay.com/photo/2016/02/03/08/35/door-lock-1175452_640.jpg'},
+  {id:'c001',n:'Escalera aluminio tijera 6 peldaños',d:'150kg',c:'Construcción',p:48000,img:'https://cdn.pixabay.com/photo/2016/11/18/17/42/ladder-1836430_640.jpg'},
+  {id:'c002',n:'Cinta de papel juntas drywall',d:'50 metros',c:'Construcción',p:2400,img:'https://cdn.pixabay.com/photo/2016/11/19/14/00/architecture-1839450_640.jpg'},
+  {id:'c003',n:'Espátula acero inox 15cm',d:'Mango madera',c:'Construcción',p:3100,img:'https://cdn.pixabay.com/photo/2020/09/04/20/16/screwdriver-5545393_640.jpg'},
 ];
+
+var carrito=[];var paso=1;
 
 /* ===== RENDER ===== */
 function renderCat(prods,agrupar){
@@ -1405,7 +1326,7 @@ function buscar(){
 }
 
 document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')buscar();});
-cargarDesdeSheets();
+renderCat(PRODS,true);
 
 /* ===== CARRITO ===== */
 function addCart(p,btn){
