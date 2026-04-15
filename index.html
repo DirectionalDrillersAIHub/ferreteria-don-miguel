@@ -1559,7 +1559,8 @@ var SVGS = {
 
 function mkCard(item){
   // Precio proveedor s/IVA × 1.7 = precio final al cliente
-  var pf = Math.round(item.p * 1.7);
+  // El precio del Sheet ya es el precio final al cliente (x1.7 aplicado en el Sheet)
+  var pf = Math.round(item.p);
   var pd = JSON.stringify({id:item.id, n:item.n, img:item.img, pML:item.p, pF:pf, codigo:item.codigo||'', prov:item.prov||''}).replace(/'/g,"&#39;");
 
   // Imagen: usar URL real si existe, sino fallback por categoría
