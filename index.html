@@ -1164,9 +1164,9 @@ footer a { color: var(--org2); text-decoration: none; }
   </div>
   <div class="link-glass">
     <input type="url" id="linkExt" placeholder="https://www.mercadolibre.com.ar/...">
-    <button onclick="enviarLink()">💬 Enviar</button>
+    <button onclick="enviarLink()">💬 Enviar link</button>
   </div>
-  <a href="https://wa.me/5492995162152" class="btn-glow" target="_blank" style="display:inline-flex;margin-top:16px;">💬 Contactar por WhatsApp</a>
+  <button onclick="consultarSinLink()" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">💬 Contactar por WhatsApp</button>
 </section>
 
 <footer>
@@ -1443,7 +1443,13 @@ function renderPagina(){
 
   // Resultado vacío
   if(!slice.length){
-    c.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--muted);"><div style="font-size:48px;margin-bottom:16px;">🔍</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin resultados</div><div style="font-size:14px;">Probá con otro término o usá el WhatsApp</div></div>';
+    var termino = document.getElementById('searchInput').value.trim();
+    c.innerHTML = '<div style="text-align:center;padding:80px 20px;">'
+      +'<div style="font-size:48px;margin-bottom:16px;">🔍</div>'
+      +'<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin resultados para "'+termino+'"</div>'
+      +'<div style="font-size:14px;color:var(--muted);margin-bottom:28px;">No encontramos ese producto en el catálogo pero podemos conseguirlo.</div>'
+      +'<button onclick="consultarProductoNoEncontrado(\''+termino.replace(/'/g,"\\'")+'\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:inline-flex;align-items:center;gap:8px;">💬 Consultar por WhatsApp</button>'
+      +'</div>';
     return;
   }
 
@@ -1799,7 +1805,21 @@ function enviarPed(){
 function enviarLink(){
   var link=document.getElementById('linkExt').value.trim();
   if(!link){toast('⚠️ Pegá el link del producto primero');return;}
-  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent('Hola Don Miguel! Encontré este producto y quiero que me lo gestionen:\n\n'+link+'\n\n¿Pueden cotizarlo con entrega a domicilio?'),'_blank');
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent('Hola Don Miguel! Encontré este producto y quiero que me lo gestionen:\n\n🔗 '+link+'\n\n¿Pueden cotizarlo con entrega a domicilio?'),'_blank');
+}
+
+function consultarSinLink(){
+  var link = document.getElementById('linkExt').value.trim();
+  var msg;
+  if(link){
+    msg = 'Hola Don Miguel! Quiero que me gestionen este producto:\n\n🔗 '+link+'\n\n¿Me pueden cotizar con entrega a domicilio?';
+  } else {
+    msg = 'Hola Don Miguel! No encontré lo que busco en el catálogo. ¿Me pueden ayudar a conseguirlo?';
+  }
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
+}
+  var msg = 'Hola Don Miguel! Busqué *"'+termino+'"* en su catálogo y no lo encontré.\n\n¿Tienen ese producto o pueden conseguirlo? ¿Me pueden cotizar con entrega a domicilio?';
+  window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
