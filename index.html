@@ -1318,36 +1318,46 @@ var IMG_CAT = {
   'Otros':                   'https://cdn.pixabay.com/photo/2017/08/01/09/33/wrench-2562425_640.jpg',
 };
 
+function parseLine(line){
+  var cols = [];
+  var cur = ''; var inQ = false;
+  for(var c=0; c<line.length; c++){
+    var ch = line[c];
+    if(ch === '"'){ inQ = !inQ; continue; }
+    if(ch === ',' && !inQ){ cols.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
 function parseCSV(text) {
   var lines = text.split('\n');
   if(lines.length < 10) return [];
 
-  // Buscar la primera línea de datos reales
-  // Una línea de dato tiene: col0=número, col1=código, col6=precio con $
+  // Buscar primera línea de datos reales: col0=número, col6=precio con $
   var dataStart = -1;
   for(var i=0; i<lines.length; i++){
     var cols = parseLine(lines[i]);
     if(cols.length >= 7 && !isNaN(parseInt(cols[0])) && cols[6] && cols[6].indexOf('$') >= 0){
-      dataStart = i;
-      break;
+      dataStart = i; break;
     }
   }
   if(dataStart < 0) return [];
 
   // Columnas fijas:
-  // 0=#, 1=Código, 2=Descripción, 3=Proveedor, 4=PrecioSinIVA, 5=PrecioConIVA, 6=PrecioTienda(x1.7), 7=Stock, 8=Unidad, 9=ImagenURL, 10=Categoría
+  // 0=#, 1=Código, 2=Descripción, 3=Proveedor, 4=PrecioSinIVA, 5=PrecioConIVA, 6=PrecioTienda, 7=Stock, 8=Unidad, 9=ImagenURL, 10=Categoría
   var prods = [];
   for(var i=dataStart; i<lines.length; i++){
     var line = lines[i].trim();
     if(!line) continue;
     var cols = parseLine(line);
     if(cols.length < 7) continue;
-
     var desc = (cols[2]||'').trim();
     if(!desc) continue;
 
-    // Precio columna 6 — formato $862.97 (punto decimal, sin coma)
-    var precioStr = (cols[6]||'').replace(/\$/g,'').replace(/\s/g,'').trim();
+    // Precio col 6: "$38,585.94" — quitar $ y comas (separador de miles), punto=decimal
+    var precioStr = (cols[6]||'').replace(/\$/g,'').replace(/,/g,'').trim();
     var precio = parseFloat(precioStr);
     if(!precio || precio <= 0) continue;
 
@@ -1367,18 +1377,6 @@ function parseCSV(text) {
     });
   }
   return prods;
-}
-
-function parseLine(line){
-  var cols = [];
-  var cur = ''; var inQ = false;
-  for(var c=0; c<line.length; c++){
-    if(line[c]==='"'){ inQ=!inQ; continue; }
-    if(line[c]===',' && !inQ){ cols.push(cur.trim()); cur=''; continue; }
-    cur += line[c];
-  }
-  cols.push(cur.trim());
-  return cols;
 }
 
 function cargarDesdeSheets(){
