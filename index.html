@@ -883,9 +883,107 @@ nav {
 .btn-mpri:hover { transform: translateY(-1px); }
 .btn-mpri.verde { background: linear-gradient(135deg, var(--verde), #00A854); box-shadow: 0 4px 20px rgba(0,210,106,0.3); }
 
-/* ===== TOAST ===== */
+/* ===== PAGINACIÓN ===== */
+.paginacion {
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:32px 0; flex-wrap:wrap;
+}
+.pag-btn {
+  width:40px; height:40px; border-radius:8px;
+  background:var(--dark2); border:1px solid var(--border);
+  color:var(--text); font-size:14px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center;
+}
+.pag-btn:hover { border-color:var(--org); color:var(--org); }
+.pag-btn.activo { background:var(--org); border-color:var(--org); color:white; }
+.pag-btn.prev-next { width:auto; padding:0 16px; gap:4px; }
+.pag-info { font-size:13px; color:var(--muted); padding:0 8px; }
+
+/* ===== BUSCADOR HERO MEJORADO MOBILE ===== */
+.hero-search-wrap { max-width:680px; width:100%; }
+.hero-search {
+  display:flex; align-items:center;
+  background:rgba(255,255,255,0.06); backdrop-filter:blur(20px);
+  border:2px solid rgba(255,255,255,0.15); border-radius:16px;
+  padding:6px 6px 6px 20px; gap:8px;
+  transition:border-color 0.2s; margin-bottom:12px;
+}
+.hero-search:focus-within { border-color:var(--org); }
+.hero-search input {
+  flex:1; background:none; border:none; outline:none;
+  color:var(--text); font-family:'Outfit',sans-serif;
+  font-size:18px; font-weight:500;
+  min-width:0;
+}
+.hero-search button {
+  background:var(--org); color:white; border:none;
+  border-radius:12px; padding:14px 28px;
+  font-family:'Outfit',sans-serif; font-size:16px; font-weight:700;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+}
+
+/* CARDS más legibles */
+.prod-card { border-radius:14px; overflow:hidden; }
+.prod-nombre { font-size:13px; font-weight:700; line-height:1.35; margin-bottom:4px; min-height:36px; }
+.prod-price { font-size:22px; font-weight:900; }
+.btn-add { padding:12px; font-size:13px; font-weight:700; border-radius:10px; }
+
+@media(max-width:768px){
+  .hero-search { padding:5px 5px 5px 14px; border-radius:12px; }
+  .hero-search input { font-size:16px; }
+  .hero-search button { padding:12px 18px; font-size:14px; border-radius:10px; }
+  .pag-btn { width:36px; height:36px; font-size:13px; }
+}
 .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--dark2); border: 1px solid var(--border); color: var(--text); padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 600; white-space: nowrap; pointer-events: none; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== BOTÓN ADMIN NAV ===== */
+.btn-admin-nav {
+  width:38px; height:38px; border-radius:8px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  color:var(--muted); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.btn-admin-nav:hover { background:rgba(255,69,0,0.1); border-color:rgba(255,69,0,0.2); color:var(--org); }
+
+/* ===== MODAL LOGIN ADMIN ===== */
+.admin-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.85);
+  display:none; align-items:center; justify-content:center;
+  z-index:1000; backdrop-filter:blur(8px);
+}
+.admin-overlay.open { display:flex; }
+.admin-box {
+  background:#0F0F16; border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px; padding:40px; width:100%; max-width:400px;
+  margin:16px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.admin-box h3 { font-size:22px; font-weight:900; margin-bottom:4px; }
+.admin-box p { font-size:13px; color:var(--muted); margin-bottom:28px; }
+.admin-input-wrap { margin-bottom:16px; }
+.admin-input-wrap label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
+.admin-input {
+  width:100%; background:#16161F; border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:14px 16px; color:var(--text);
+  font-family:'Outfit',sans-serif; font-size:15px; outline:none;
+  transition:border-color 0.2s; box-sizing:border-box;
+}
+.admin-input:focus { border-color:rgba(255,69,0,0.4); }
+.admin-error { font-size:12px; color:#ff4444; margin-bottom:12px; display:none; }
+.admin-btns { display:flex; gap:10px; margin-top:24px; }
+.btn-admin-cancel {
+  flex:1; padding:13px; background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08); color:var(--muted);
+  border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; cursor:pointer;
+}
+.btn-admin-ok {
+  flex:2; padding:13px; background:var(--org); color:white; border:none;
+  border-radius:10px; font-family:'Outfit',sans-serif; font-size:15px; font-weight:700;
+  cursor:pointer; transition:opacity 0.2s;
+}
+.btn-admin-ok:hover { opacity:0.88; }
 
 /* ===== WSP FLOAT ===== */
 .wsp-float { position: fixed; bottom: 28px; right: 28px; background: linear-gradient(135deg, #00C853, #00D26A); color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; text-decoration: none; z-index: 150; box-shadow: 0 8px 28px rgba(0,210,106,0.4); transition: transform 0.2s; }
@@ -917,6 +1015,27 @@ footer a { color: var(--org2); text-decoration: none; }
 </head>
 <body>
 
+<!-- MODAL LOGIN ADMIN -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-box">
+    <h3>⚙️ Acceso Admin</h3>
+    <p>Ingresá tus credenciales para acceder al panel de administración</p>
+    <div class="admin-input-wrap">
+      <label>Usuario</label>
+      <input class="admin-input" type="text" id="adminUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="admin-input-wrap">
+      <label>Contraseña</label>
+      <input class="admin-input" type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()">
+    </div>
+    <div class="admin-error" id="adminError">❌ Usuario o contraseña incorrectos</div>
+    <div class="admin-btns">
+      <button class="btn-admin-cancel" onclick="cerrarLoginAdmin()">Cancelar</button>
+      <button class="btn-admin-ok" onclick="loginAdmin()">🔓 Ingresar</button>
+    </div>
+  </div>
+</div>
+
 <canvas id="canvas"></canvas>
 <div class="toast" id="toast"></div>
 
@@ -930,7 +1049,7 @@ footer a { color: var(--org2); text-decoration: none; }
     </div>
   </a>
   <div class="nav-search">
-    <input type="text" id="searchInput" placeholder="Buscá herramientas, cables, caños..." autocomplete="off">
+    <input type="text" id="searchInputNav" placeholder="Buscá herramientas, cables, caños..." autocomplete="off" oninput="syncSearch(this.value)" onkeydown="if(event.key==='Enter')buscar()">
     <button onclick="buscar()">🔍</button>
   </div>
   <div class="nav-right">
@@ -939,6 +1058,7 @@ footer a { color: var(--org2); text-decoration: none; }
       🛒 Carrito
       <span class="cart-badge" id="cartBadge">0</span>
     </button>
+    <button class="btn-admin-nav" onclick="abrirLoginAdmin()" title="Acceso administrador">⚙️</button>
   </div>
 </nav>
 
@@ -1297,19 +1417,98 @@ var PRODS_DEMO = [
   {id:'s001',n:'Candado seguridad 60mm',d:'Arco acero templado',c:'Seguridad',p:9800,img:'https://cdn.pixabay.com/photo/2017/01/09/10/08/padlock-1964899_640.jpg'},
 ];
 
-/* ===== RENDER ===== */
-function renderCat(prods,agrupar){
-  var c=document.getElementById('catContainer');c.innerHTML='';
-  if(agrupar){
-    var cats={};
-    prods.forEach(function(p){if(!cats[p.c])cats[p.c]=[];cats[p.c].push(p);});
-    Object.keys(cats).forEach(function(cat){c.appendChild(mkSec(cat,cats[cat]));});
-  } else {
-    var sec=document.createElement('div');sec.className='cat-section';
-    var g=document.createElement('div');g.className='prod-grid';
-    prods.forEach(function(p){g.appendChild(mkCard(p));});
-    sec.appendChild(g);c.appendChild(sec);
+var PRODS_POR_PAG = 12;
+var paginaActual = 1;
+var prodsActuales = [];
+
+function syncSearch(val){
+  document.getElementById('searchInput').value = val;
+}
+
+function renderCat(prods, agrupar){
+  prodsActuales = prods;
+  paginaActual = 1;
+  renderPagina();
+}
+
+function renderPagina(){
+  var c = document.getElementById('catContainer');
+  c.innerHTML = '';
+
+  var total = prodsActuales.length;
+  var totalPags = Math.max(1, Math.ceil(total / PRODS_POR_PAG));
+  if(paginaActual > totalPags) paginaActual = totalPags;
+
+  var inicio = (paginaActual - 1) * PRODS_POR_PAG;
+  var fin    = Math.min(inicio + PRODS_POR_PAG, total);
+  var slice  = prodsActuales.slice(inicio, fin);
+
+  // Resultado vacío
+  if(!slice.length){
+    c.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--muted);"><div style="font-size:48px;margin-bottom:16px;">🔍</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin resultados</div><div style="font-size:14px;">Probá con otro término o usá el WhatsApp</div></div>';
+    return;
   }
+
+  // Grid de productos
+  var grid = document.createElement('div');
+  grid.className = 'prod-grid';
+  slice.forEach(function(p){ grid.appendChild(mkCard(p)); });
+  c.appendChild(grid);
+
+  // Info de resultados
+  var info = document.createElement('div');
+  info.style.cssText = 'text-align:center;font-size:13px;color:var(--muted);margin-top:16px;';
+  info.textContent = 'Mostrando ' + (inicio+1) + '-' + fin + ' de ' + total + ' productos';
+  c.appendChild(info);
+
+  // Paginación
+  if(totalPags > 1){
+    var pag = document.createElement('div');
+    pag.className = 'paginacion';
+
+    // Anterior
+    var prev = document.createElement('button');
+    prev.className = 'pag-btn prev-next';
+    prev.innerHTML = '← Anterior';
+    prev.disabled = paginaActual === 1;
+    if(paginaActual === 1) prev.style.opacity = '0.3';
+    prev.onclick = function(){ if(paginaActual > 1){ paginaActual--; renderPagina(); scrollToCat(); } };
+    pag.appendChild(prev);
+
+    // Números de página
+    var rango = 2;
+    for(var i=1; i<=totalPags; i++){
+      if(i === 1 || i === totalPags || (i >= paginaActual - rango && i <= paginaActual + rango)){
+        (function(num){
+          var btn = document.createElement('button');
+          btn.className = 'pag-btn' + (num === paginaActual ? ' activo' : '');
+          btn.textContent = num;
+          btn.onclick = function(){ paginaActual = num; renderPagina(); scrollToCat(); };
+          pag.appendChild(btn);
+        })(i);
+      } else if(i === paginaActual - rango - 1 || i === paginaActual + rango + 1){
+        var dots = document.createElement('span');
+        dots.className = 'pag-info';
+        dots.textContent = '...';
+        pag.appendChild(dots);
+      }
+    }
+
+    // Siguiente
+    var next = document.createElement('button');
+    next.className = 'pag-btn prev-next';
+    next.innerHTML = 'Siguiente →';
+    next.disabled = paginaActual === totalPags;
+    if(paginaActual === totalPags) next.style.opacity = '0.3';
+    next.onclick = function(){ if(paginaActual < totalPags){ paginaActual++; renderPagina(); scrollToCat(); } };
+    pag.appendChild(next);
+
+    c.appendChild(pag);
+  }
+}
+
+function scrollToCat(){
+  document.getElementById('catalogo').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function mkSec(cat,prods){
@@ -1361,13 +1560,24 @@ var SVGS = {
 };
 
 function mkCard(item){
-  var pf=Math.round(item.p*(1+CFG.COM));
-  var pd=JSON.stringify({id:item.id,n:item.n,img:item.id,pML:item.p,pF:pf}).replace(/'/g,"&#39;");
-  var svgHtml = SVGS[item.id] || '<svg viewBox="0 0 140 140"><text x="70" y="80" text-anchor="middle" font-size="60">🔧</text></svg>';
-  var card=document.createElement('div');
-  card.className='prod-card';
-  card.innerHTML=
-    '<div class="prod-img">'+svgHtml+'</div>'+
+  var pf = Math.round(item.p * (1 + CFG.COM));
+  if(!pf || pf < 10) pf = Math.round(item.p); // fallback si COM da raro
+  var pd = JSON.stringify({id:item.id, n:item.n, img:item.img, pML:item.p, pF:pf}).replace(/'/g,"&#39;");
+
+  // Imagen: usar URL real si existe, sino fallback por categoría
+  var imgHtml;
+  if(item.img && item.img.startsWith('http')){
+    imgHtml = '<img src="'+item.img+'" alt="'+item.n+'" style="width:100%;height:100%;object-fit:contain;padding:8px;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+             +'<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:48px;">🔧</div>';
+  } else {
+    var imgCat = IMG_CAT[item.c] || IMG_CAT['Otros'];
+    imgHtml = '<img src="'+imgCat+'" alt="'+item.n+'" style="width:100%;height:100%;object-fit:contain;padding:8px;">';
+  }
+
+  var card = document.createElement('div');
+  card.className = 'prod-card';
+  card.innerHTML =
+    '<div class="prod-img" style="background:#f8f8f8;">'+imgHtml+'</div>'+
     '<div class="prod-body">'+
       '<div class="prod-cat-tag">'+item.c+'</div>'+
       '<div class="prod-nombre">'+item.n+'</div>'+
@@ -1402,7 +1612,48 @@ function buscar(){
   document.getElementById('catContainer').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')buscar();});
+/* ===== LOGIN ADMIN ===== */
+var ADMIN_USER = 'admin';
+var ADMIN_PASS = 'Ferreteria2024';
+var ADMIN_URL  = 'panel_admin.html';
+
+function abrirLoginAdmin(){
+  document.getElementById('adminOverlay').classList.add('open');
+  document.getElementById('adminUser').value = '';
+  document.getElementById('adminPass').value = '';
+  document.getElementById('adminError').style.display = 'none';
+  setTimeout(function(){ document.getElementById('adminUser').focus(); }, 100);
+}
+
+function cerrarLoginAdmin(){
+  document.getElementById('adminOverlay').classList.remove('open');
+}
+
+function loginAdmin(){
+  var user = document.getElementById('adminUser').value.trim();
+  var pass = document.getElementById('adminPass').value;
+  var err  = document.getElementById('adminError');
+
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    err.style.display = 'none';
+    cerrarLoginAdmin();
+    window.open(ADMIN_URL, '_blank');
+  } else {
+    err.style.display = 'block';
+    document.getElementById('adminPass').value = '';
+    document.getElementById('adminPass').focus();
+  }
+}
+
+document.getElementById('adminOverlay').addEventListener('click', function(e){
+  if(e.target === this) cerrarLoginAdmin();
+});
+
+// Buscador hero — funciona en mobile
+document.getElementById('searchInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') buscar();
+});
+
 cargarDesdeSheets();
 
 /* ===== CARRITO ===== */
