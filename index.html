@@ -1320,10 +1320,21 @@ var IMG_CAT = {
 
 function parseCSV(text) {
   var lines = text.split('\n');
-  if(lines.length < 2) return [];
+  if(lines.length < 5) return [];
 
-  // Detectar encabezados
-  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim().toLowerCase(); });
+  // Buscar la fila de encabezados reales (tiene "CÓDIGO" o "Nombre" o "DESCRIPCIÓN")
+  var headerIdx = 0;
+  for(var h=0; h<Math.min(8, lines.length); h++){
+    var row = lines[h].toLowerCase();
+    if(row.includes('código') || row.includes('codigo') || row.includes('descripci') || row.includes('nombre')){
+      headerIdx = h;
+      break;
+    }
+  }
+
+  // Parsear fila de encabezados
+  var headers = parseLine(lines[headerIdx]).map(function(h){ return h.toLowerCase().trim(); });
+
   function col(keys){
     for(var k=0; k<keys.length; k++){
       for(var j=0; j<headers.length; j++){
@@ -1332,57 +1343,67 @@ function parseCSV(text) {
     }
     return -1;
   }
-  var iNombre   = col(['nombre']);                        if(iNombre<0)   iNombre=0;
-  var iCodigo   = col(['cód','cod','codigo','code']);     if(iCodigo<0)   iCodigo=1;
-  var iDesc     = col(['desc','descrip']);                if(iDesc<0)     iDesc=2;
-  var iProv     = col(['proveedor','prov','supplier']);   if(iProv<0)     iProv=3;
-  var iPrecio   = col(['precio','price']);                if(iPrecio<0)   iPrecio=4;
-  var iStock    = col(['stock']);                         if(iStock<0)    iStock=5;
-  var iUnidad   = col(['unidad']);                        if(iUnidad<0)   iUnidad=6;
-  var iImagen   = col(['imagen','image','img','url','foto']);
-  var iCat      = col(['categ']);
+
+  // Columnas del sheet completo:
+  // A=#, B=Código, C=Descripción, D=Proveedor, E=Precio s/IVA, F=Precio c/IVA, G=Precio Tienda x1.7, H=Stock, I=Unidad, J=Imagen, K=Categoría
+  var iCodigo  = col(['código','codigo','cod']);    if(iCodigo<0)  iCodigo=1;
+  var iDesc    = col(['descripci','nombre']);        if(iDesc<0)    iDesc=2;
+  var iProv    = col(['proveedor','prov']);          if(iProv<0)    iProv=3;
+  var iPrecio  = col(['tienda','x1.7','x1,7','precio tienda']); // columna G — precio final
+  if(iPrecio<0) iPrecio = col(['precio']);          if(iPrecio<0)  iPrecio=6;
+  var iStock   = col(['stock']);                    if(iStock<0)   iStock=7;
+  var iUnidad  = col(['unidad']);                   if(iUnidad<0)  iUnidad=8;
+  var iImagen  = col(['imagen','image','url','foto']); if(iImagen<0) iImagen=9;
+  var iCat     = col(['categ']);                    if(iCat<0)     iCat=10;
+
+  // Datos desde headerIdx+2 (saltamos la fila de subtítulos también)
+  var dataStart = headerIdx + 2;
 
   var prods = [];
-  for(var i=1; i<lines.length; i++){
+  for(var i=dataStart; i<lines.length; i++){
     var line = lines[i].trim();
     if(!line) continue;
 
-    // Parsear CSV respetando comillas
-    var cols = [];
-    var cur = ''; var inQ = false;
-    for(var c=0; c<line.length; c++){
-      if(line[c]==='"'){ inQ=!inQ; continue; }
-      if(line[c]===',' && !inQ){ cols.push(cur.trim()); cur=''; continue; }
-      cur += line[c];
-    }
-    cols.push(cur.trim());
+    var cols = parseLine(line);
+    if(cols.length < 4) continue;
 
-    var nombre = (cols[iNombre]||'').trim();
-    if(!nombre || nombre==='#' || nombre==='Nombre') continue;
+    var desc = (cols[iDesc]||'').trim();
+    if(!desc || desc==='' || desc.toLowerCase().includes('descripci')) continue;
 
+    // Precio de la columna Tienda x1.7
     var precio = 0;
-    for(var pc=iPrecio; pc<Math.min(cols.length, iPrecio+4); pc++){
-      var pv = parseFloat((cols[pc]||'').replace(/[^0-9.,]/g,'').replace(',','.'));
-      if(pv > 0){ precio = pv; break; }
-    }
-    if(!precio) continue;
+    var precioStr = (cols[iPrecio]||'').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
+    precio = parseFloat(precioStr);
+    if(!precio || precio <= 0) continue;
 
-    var cat = (iCat>=0 && cols[iCat]) ? cols[iCat].trim() : 'Otros';
+    var cat = (cols[iCat]||'Otros').trim() || 'Otros';
     var img = (iImagen>=0 && cols[iImagen]) ? cols[iImagen].trim() : '';
-    if(!img || img==='' || img==='undefined') img = IMG_CAT[cat] || IMG_CAT['Otros'];
+    if(!img) img = IMG_CAT[cat] || IMG_CAT['Otros'];
 
     prods.push({
-      id:       'gs'+i,
-      n:        nombre,
-      d:        (cols[iDesc]||nombre).trim(),
-      c:        cat,
-      p:        precio,
-      img:      img,
-      codigo:   (cols[iCodigo]||'').trim(),   // ← código proveedor
-      prov:     (cols[iProv]||'').trim()      // ← proveedor
+      id:     'gs'+i,
+      n:      desc.length > 60 ? desc.substring(0,60) : desc,
+      d:      desc,
+      c:      cat,
+      p:      precio,
+      img:    img,
+      codigo: (cols[iCodigo]||'').trim(),
+      prov:   (cols[iProv]||'').trim()
     });
   }
   return prods;
+}
+
+function parseLine(line){
+  var cols = [];
+  var cur = ''; var inQ = false;
+  for(var c=0; c<line.length; c++){
+    if(line[c]==='"'){ inQ=!inQ; continue; }
+    if(line[c]===',' && !inQ){ cols.push(cur.trim()); cur=''; continue; }
+    cur += line[c];
+  }
+  cols.push(cur.trim());
+  return cols;
 }
 
 function cargarDesdeSheets(){
