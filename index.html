@@ -1278,14 +1278,12 @@ function cargarDesdeSheets(){
       }
       if(loading) loading.style.display = 'none';
       renderCat(PRODS, true);
-      renderFiltros();
     })
     .catch(function(err){
       console.warn('⚠️ Error cargando Sheet — usando demo:', err);
       PRODS = PRODS_DEMO;
       if(loading) loading.style.display = 'none';
       renderCat(PRODS, true);
-      renderFiltros();
     });
 }
 
