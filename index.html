@@ -1253,6 +1253,10 @@ footer a { color: var(--org2); text-decoration: none; }
         <p>Tu pedido fue enviado a nuestro WhatsApp. Te contactamos a la brevedad para confirmar el pago y coordinar la entrega.</p>
         <div class="confirm-wsp" id="confWsp"></div>
         <div class="confirm-date"><div class="dl">📅 Fecha estimada de arribo</div><div class="dv" id="confFecha">—</div></div>
+        <div style="margin-top:20px;text-align:center;">
+          <button onclick="enviarCopiaCliente()" style="background:linear-gradient(135deg,#00C853,#00D26A);color:white;border:none;padding:13px 26px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,200,83,0.3);transition:opacity 0.2s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">📲 Enviarme copia por WhatsApp</button>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px;">Recibirás en tu WhatsApp el detalle completo de tu pedido</p>
+        </div>
       </div>
     </div>
 
@@ -1298,6 +1302,18 @@ drawParticles();
 
 /* ===== CONFIG ===== */
 var CFG={WSP:'5492995162152',CBU:'0070738330004002164453',ALIAS:'JOAQUINAVILAAHORRO',COM:0.10,DIAS:5};
+
+/* ===== UTILIDADES SEGURIDAD ===== */
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function normalizarTelAR(tel){
+  var d=tel.replace(/\D/g,'');
+  if(!d||d.length<8)return '';
+  if(d.startsWith('549'))return d;
+  if(d.startsWith('54'))return '549'+d.substring(2);
+  if(d.startsWith('0'))d=d.substring(1);
+  if(d.startsWith('9'))return '54'+d;
+  return '549'+d;
+}
 var CATS=[{id:'Herramientas',icon:'🔨',sub:'Herramientas manuales · Disponibles en stock'},{id:'Herramientas eléctricas',icon:'⚡',sub:'Taladros, amoladoras y más'},{id:'Electricidad',icon:'🔌',sub:'Cables, llaves, tomacorrientes'},{id:'Plomería',icon:'🚿',sub:'Caños, canillas, conexiones'},{id:'Pintura',icon:'🎨',sub:'Látex, esmaltes, rodillos'},{id:'Fijaciones',icon:'🪛',sub:'Tornillos, tarugos, adhesivos'},{id:'Seguridad',icon:'🔒',sub:'Candados, cerraduras'},{id:'Construcción',icon:'🏗️',sub:'Escaleras, espátulas, cintas'}];
 var IMAP={'Herramientas':'🔨','Herramientas eléctricas':'⚡','Electricidad':'🔌','Plomería':'🚿','Pintura':'🎨','Fijaciones':'🪛','Seguridad':'🔒','Construcción':'🏗️'};
 var SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2OwGI5PEWgaxWEyWExPAXAToKWbkxNVBgrJBkNUXF4tHOGV2iNzz230UHEF0XBJf7VSTzTiaPVfuH/pub?gid=1288306361&single=true&output=csv';
@@ -1444,11 +1460,12 @@ function renderPagina(){
   // Resultado vacío
   if(!slice.length){
     var termino = document.getElementById('searchInput').value.trim();
+    var terminoSafe = escHtml(termino);
     c.innerHTML = '<div style="text-align:center;padding:80px 20px;">'
       +'<div style="font-size:48px;margin-bottom:16px;">🔍</div>'
-      +'<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin resultados para "'+termino+'"</div>'
+      +'<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin resultados para &ldquo;'+terminoSafe+'&rdquo;</div>'
       +'<div style="font-size:14px;color:var(--muted);margin-bottom:28px;">No encontramos ese producto en el catálogo pero podemos conseguirlo.</div>'
-      +'<button onclick="consultarProductoNoEncontrado(\''+termino.replace(/'/g,"\\'")+'\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:inline-flex;align-items:center;gap:8px;">💬 Consultar por WhatsApp</button>'
+      +'<button onclick="consultarProductoNoEncontrado()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:inline-flex;align-items:center;gap:8px;">💬 Consultar por WhatsApp</button>'
       +'</div>';
     return;
   }
@@ -1642,6 +1659,7 @@ function loginAdmin(){
   if(user === ADMIN_USER && pass === ADMIN_PASS){
     err.style.display = 'none';
     cerrarLoginAdmin();
+    sessionStorage.setItem('adminAuth', Date.now().toString());
     window.open(ADMIN_URL, '_blank');
   } else {
     err.style.display = 'block';
@@ -1744,12 +1762,12 @@ function valForm(){
 
 function enviarPed(){
   if(!valForm())return;
-  var n=document.getElementById('fN').value;
-  var t=document.getElementById('fT').value;
-  var d=document.getElementById('fD').value;
-  var ci=document.getElementById('fC').value;
-  var cp=document.getElementById('fP').value;
-  var ob=document.getElementById('fO').value;
+  var n=document.getElementById('fN').value.trim();
+  var t=document.getElementById('fT').value.trim();
+  var d=document.getElementById('fD').value.trim();
+  var ci=document.getElementById('fC').value.trim();
+  var cp=document.getElementById('fP').value.trim();
+  var ob=document.getElementById('fO').value.trim();
   var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
   var fa=new Date();fa.setDate(fa.getDate()+CFG.DIAS);
   var fs=fa.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
@@ -1795,11 +1813,49 @@ function enviarPed(){
     +'━━━━━━━━━━━━━━━━━━━━━\n'
     +'⚠️ *Verificar comprobante adjunto*';
 
-  document.getElementById('confWsp').innerHTML=itemsCliente.replace(/\n/g,'<br>');
+  // ===== GUARDAR DATOS PARA CONFIRMACIÓN =====
+  window._pedidoTel = t;
+  window._pedidoItemsCliente = itemsCliente;
+  window._pedidoFecha = fs;
+  window._pedidoTotal = Math.round(tot);
+
+  // ===== ENVIAR EMAIL AL ADMIN (silencioso — no bloquea el flujo) =====
+  var emailItems = carrito.map(function(i){
+    return {nombre:i.n, codigo:i.codigo||'', prov:i.prov||'', qty:i.qty, subtotal:Math.round(i.pF*i.qty)};
+  });
+  fetch('/api/enviar-pedido',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nombre:n,telefono:t,direccion:d,ciudad:ci,cp:cp,obs:ob,items:emailItems,total:Math.round(tot).toLocaleString('es-AR'),fecha:fs})
+  }).catch(function(){});
+
+  // ===== ACTUALIZAR PANTALLA DE CONFIRMACIÓN =====
+  document.getElementById('confWsp').innerHTML=itemsCliente.split('\n').map(escHtml).join('<br>');
   document.getElementById('confFecha').textContent='≈ '+fs+' ('+CFG.DIAS+' días hábiles)';
+
+  // ===== ABRIR WHATSAPP DEL ADMIN =====
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
   paso=3;rndrPaso();
   setTimeout(function(){carrito=[];updCart();},1000);
+}
+
+function enviarCopiaCliente(){
+  var tel = window._pedidoTel || '';
+  var num = normalizarTelAR(tel);
+  if(!num){toast('⚠️ No se pudo determinar el número. Guardá la pantalla como referencia.');return;}
+  var msgCopia = '✅ *CONFIRMACIÓN DE PEDIDO - Ferretería Don Miguel*\n'
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'Hola! Aquí está la copia de tu pedido:\n\n'
+    +'🛒 *TUS PRODUCTOS:*\n'
+    +(window._pedidoItemsCliente||'')+'\n'
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'💵 *TOTAL: $'+(window._pedidoTotal||0).toLocaleString('es-AR')+'*\n'
+    +'📅 Arribo estimado: '+(window._pedidoFecha||'')+'\n'
+    +'━━━━━━━━━━━━━━━━━━━━━\n'
+    +'🏦 CBU: '+CFG.CBU+'\n'
+    +'🔑 Alias: '+CFG.ALIAS+'\n\n'
+    +'Gracias por elegir Ferretería Don Miguel! 🔧';
+  window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msgCopia),'_blank');
 }
 
 function enviarLink(){
@@ -1818,6 +1874,9 @@ function consultarSinLink(){
   }
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
 }
+
+function consultarProductoNoEncontrado(){
+  var termino = document.getElementById('searchInput').value.trim();
   var msg = 'Hola Don Miguel! Busqué *"'+termino+'"* en su catálogo y no lo encontré.\n\n¿Tienen ese producto o pueden conseguirlo? ¿Me pueden cotizar con entrega a domicilio?';
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
 }

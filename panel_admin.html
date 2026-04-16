@@ -1055,6 +1055,18 @@ td { padding:13px 14px; font-size:13px; vertical-align:middle; }
 </div>
 
 <script>
+/* ===== PROTECCIÓN DE ACCESO ===== */
+(function(){
+  if(!sessionStorage.getItem('adminAuth')){
+    document.body.style.display='none';
+    document.head.insertAdjacentHTML('beforeend','<style>body{display:none!important}</style>');
+    setTimeout(function(){
+      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#09090D;color:#f0ede8;font-family:Outfit,sans-serif;text-align:center;"><div><div style="font-size:56px;margin-bottom:16px">🔒</div><h2 style="margin:0 0 8px;font-size:22px;font-weight:700">Acceso denegado</h2><p style="color:rgba(240,237,232,0.45);font-size:14px;margin:0 0 28px">Debés iniciar sesión desde la tienda.</p><a href="/" style="display:inline-block;padding:13px 32px;background:#FF4500;color:white;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;">Ir a la tienda</a></div></div>';
+      document.body.style.display='';
+    },0);
+  }
+})();
+
 /* ===== ESTADO GLOBAL ===== */
 var productos = [];
 var config = {
