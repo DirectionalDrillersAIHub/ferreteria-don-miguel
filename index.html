@@ -1236,11 +1236,11 @@ footer a { color: var(--org2); text-decoration: none; }
       <div class="fg"><label>Observaciones</label><textarea id="fO" placeholder="Piso, depto, referencias..."></textarea></div>
       <div class="fg">
         <label>Comprobante de pago *</label>
-        <div class="upload-block">
-          <input type="file" accept="image/*,.pdf" onchange="prevComp(event)">
+        <div class="upload-block" id="uploadBlock">
+          <input type="file" id="compInput" accept="image/*,.pdf" onchange="prevComp(event)">
           <div class="ui">📎</div>
           <p>Subí la captura de tu transferencia</p>
-          <div class="uh">JPG, PNG o PDF · Máx. 5MB</div>
+          <div class="uh">JPG, PNG o PDF · Máx. 3MB</div>
           <img id="compPrev" class="upload-prev">
         </div>
       </div>
@@ -1253,6 +1253,14 @@ footer a { color: var(--org2); text-decoration: none; }
         <p>Tu pedido fue enviado a nuestro WhatsApp. Te contactamos a la brevedad para confirmar el pago y coordinar la entrega.</p>
         <div class="confirm-wsp" id="confWsp"></div>
         <div class="confirm-date"><div class="dl">📅 Fecha estimada de arribo</div><div class="dv" id="confFecha">—</div></div>
+
+        <!-- COMPROBANTE + INSTRUCCIÓN WHATSAPP -->
+        <div id="confComprobante" style="display:none;margin-top:20px;background:rgba(255,184,0,0.06);border:1px solid rgba(255,184,0,0.2);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">📎 Adjuntá el comprobante en WhatsApp</div>
+          <img id="confCompImg" style="max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto 12px;" src="">
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;">En el chat de WhatsApp que se abrió, tocá el clip 📎 y adjuntá esta imagen antes de enviar el mensaje.</div>
+        </div>
+
         <div style="margin-top:20px;text-align:center;">
           <button onclick="enviarCopiaCliente()" style="background:linear-gradient(135deg,#00C853,#00D26A);color:white;border:none;padding:13px 26px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,200,83,0.3);transition:opacity 0.2s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">📲 Enviarme copia por WhatsApp</button>
           <p style="font-size:12px;color:var(--muted);margin-top:8px;">Recibirás en tu WhatsApp el detalle completo de tu pedido</p>
@@ -1752,11 +1760,37 @@ function rndrPaso(){
 }
 
 function copiarCBU(){navigator.clipboard.writeText(CFG.CBU).then(function(){toast('CBU copiado ✅');});}
-function prevComp(e){var f=e.target.files[0];if(!f)return;var prev=document.getElementById('compPrev');if(f.type.startsWith('image/')){var r=new FileReader();r.onload=function(ev){prev.src=ev.target.result;prev.style.display='block';};r.readAsDataURL(f);}else{document.querySelector('.upload-block p').textContent='📄 '+f.name;}}
+
+function prevComp(e){
+  var f=e.target.files[0];if(!f)return;
+  if(f.size > 3*1024*1024){toast('⚠️ El archivo supera los 3MB. Usá una imagen más pequeña.');e.target.value='';return;}
+  document.getElementById('uploadBlock').style.borderColor='rgba(0,210,106,0.5)';
+  var prev=document.getElementById('compPrev');
+  if(f.type.startsWith('image/')){
+    var r=new FileReader();
+    r.onload=function(ev){
+      prev.src=ev.target.result;prev.style.display='block';
+      window._comprobante64=ev.target.result;
+      window._comprobanteMime=f.type;
+    };
+    r.readAsDataURL(f);
+  } else {
+    document.querySelector('#uploadBlock p').textContent='📄 '+f.name;
+    var r2=new FileReader();
+    r2.onload=function(ev){window._comprobante64=ev.target.result;window._comprobanteMime=f.type;};
+    r2.readAsDataURL(f);
+  }
+}
 
 function valForm(){
   var ff=['fN','fT','fD','fC'];
   for(var i=0;i<ff.length;i++){var el=document.getElementById(ff[i]);if(!el.value.trim()){el.style.borderColor='#FF4444';el.focus();toast('⚠️ Completá todos los campos obligatorios');setTimeout(function(e){return function(){e.style.borderColor='rgba(255,255,255,0.08)';};}(el),2000);return false;}}
+  if(!window._comprobante64){
+    toast('⚠️ Adjuntá el comprobante de pago antes de continuar');
+    document.getElementById('uploadBlock').style.borderColor='#FF4444';
+    setTimeout(function(){document.getElementById('uploadBlock').style.borderColor='';},2500);
+    return false;
+  }
   return true;
 }
 
@@ -1819,24 +1853,37 @@ function enviarPed(){
   window._pedidoFecha = fs;
   window._pedidoTotal = Math.round(tot);
 
-  // ===== ENVIAR EMAIL AL ADMIN (silencioso — no bloquea el flujo) =====
+  // ===== ENVIAR EMAIL AL ADMIN con comprobante adjunto =====
   var emailItems = carrito.map(function(i){
     return {nombre:i.n, codigo:i.codigo||'', prov:i.prov||'', qty:i.qty, subtotal:Math.round(i.pF*i.qty)};
   });
   fetch('/api/enviar-pedido',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({nombre:n,telefono:t,direccion:d,ciudad:ci,cp:cp,obs:ob,items:emailItems,total:Math.round(tot).toLocaleString('es-AR'),fecha:fs})
+    body:JSON.stringify({nombre:n,telefono:t,direccion:d,ciudad:ci,cp:cp,obs:ob,items:emailItems,total:Math.round(tot).toLocaleString('es-AR'),fecha:fs,comprobante:window._comprobante64||null})
   }).catch(function(){});
 
   // ===== ACTUALIZAR PANTALLA DE CONFIRMACIÓN =====
   document.getElementById('confWsp').innerHTML=itemsCliente.split('\n').map(escHtml).join('<br>');
   document.getElementById('confFecha').textContent='≈ '+fs+' ('+CFG.DIAS+' días hábiles)';
 
+  // ===== MOSTRAR COMPROBANTE EN PASO 3 PARA ADJUNTAR EN WHATSAPP =====
+  var confComp = document.getElementById('confComprobante');
+  var confImg  = document.getElementById('confCompImg');
+  if(window._comprobante64 && (window._comprobanteMime||'').startsWith('image/')){
+    confImg.src = window._comprobante64;
+    confImg.style.display = 'block';
+    confComp.style.display = 'block';
+  } else if(window._comprobante64){
+    confImg.style.display = 'none';
+    confComp.style.display = 'block';
+  }
+
   // ===== ABRIR WHATSAPP DEL ADMIN =====
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
   paso=3;rndrPaso();
-  setTimeout(function(){carrito=[];updCart();},1000);
+  // Limpiar comprobante para próxima compra
+  setTimeout(function(){carrito=[];updCart();window._comprobante64=null;window._comprobanteMime=null;},1000);
 }
 
 function enviarCopiaCliente(){

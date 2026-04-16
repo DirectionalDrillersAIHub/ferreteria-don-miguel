@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Configuración de mail no disponible' });
   }
 
-  const { nombre, telefono, direccion, ciudad, cp, obs, items, total, fecha } = req.body || {};
+  const { nombre, telefono, direccion, ciudad, cp, obs, items, total, fecha, comprobante } = req.body || {};
 
   // Validación básica
   if (!nombre || !telefono || !Array.isArray(items) || !items.length || !total) {
@@ -161,11 +161,29 @@ module.exports = async function handler(req, res) {
       },
     });
 
+    // Procesar comprobante adjunto (base64 data URL)
+    const attachments = [];
+    if (comprobante && typeof comprobante === 'string' && comprobante.startsWith('data:')) {
+      const matches = comprobante.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+        const ext = mimeType.includes('pdf') ? '.pdf' : mimeType.includes('png') ? '.png' : '.jpg';
+        attachments.push({
+          filename: 'comprobante_pago' + ext,
+          content: base64Data,
+          encoding: 'base64',
+          contentType: mimeType,
+        });
+      }
+    }
+
     await transporter.sendMail({
       from: `"Ferretería Don Miguel" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER,
       subject: `🔧 Nuevo pedido: ${esc(nombre)} — $${esc(total)}`,
       html,
+      attachments,
     });
 
     return res.status(200).json({ ok: true });
