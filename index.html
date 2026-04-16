@@ -1209,13 +1209,28 @@ footer a { color: var(--org2); text-decoration: none; }
 
     <div class="modal-body" id="mb1">
       <div class="monto-block"><div class="ml">Total a transferir</div><div class="mv" id="montoMod">$0</div></div>
-      <div class="cbu-block">
-        <div class="cbu-lbl">CBU</div>
-        <div class="cbu-num" id="cbuMod">0070738330004002164453</div>
-        <div class="cbu-alias">Alias: <strong>JOAQUINAVILAAHORRO</strong></div>
-        <button class="btn-copy" onclick="copiarCBU()">📋 Copiar CBU</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="pagoOpciones">
+
+        <!-- CBU -->
+        <div class="cbu-block" style="margin-bottom:0;">
+          <div class="cbu-lbl">🏦 Transferencia bancaria</div>
+          <div class="cbu-lbl" style="margin-top:8px;">CBU</div>
+          <div class="cbu-num" id="cbuMod" style="font-size:18px;">0070738330004002164453</div>
+          <div class="cbu-alias">Alias: <strong>JOAQUINAVILAAHORRO</strong></div>
+          <button class="btn-copy" onclick="copiarCBU()">📋 Copiar CBU</button>
+        </div>
+
+        <!-- QR MERCADO PAGO -->
+        <div class="cbu-block" id="qrBlock" style="margin-bottom:0;display:none;">
+          <div class="cbu-lbl">📱 Mercado Pago</div>
+          <div style="margin:10px auto 12px;display:flex;align-items:center;justify-content:center;">
+            <img id="qrImg" src="" alt="QR Mercado Pago" style="width:150px;height:150px;object-fit:contain;border-radius:8px;background:white;padding:6px;">
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Escaneá con la app de Mercado Pago</div>
+        </div>
+
       </div>
-      <div class="aviso-block">⚠️ Realizá la transferencia, completá tus datos y subí el comprobante. Procesamos tu pedido al verificar el pago.</div>
+      <div class="aviso-block">⚠️ Realizá el pago, completá tus datos y subí el comprobante. Procesamos tu pedido al verificar el pago.</div>
       <div class="resume-block">
         <h4>Detalle del pedido</h4>
         <div id="resItems"></div>
@@ -1309,7 +1324,7 @@ function drawParticles(){
 drawParticles();
 
 /* ===== CONFIG ===== */
-var CFG={WSP:'5492995162152',CBU:'0070738330004002164453',ALIAS:'JOAQUINAVILAAHORRO',COM:0.10,DIAS:5};
+var CFG={WSP:'5492995162152',CBU:'0070738330004002164453',ALIAS:'JOAQUINAVILAAHORRO',QR_MP:'',COM:0.10,DIAS:5};
 
 /* ===== UTILIDADES SEGURIDAD ===== */
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -1741,8 +1756,18 @@ function abrirCheckout(){
   var tot=carrito.reduce(function(s,i){return s+(i.pF*i.qty);},0);
   document.getElementById('montoMod').textContent='$'+Math.round(tot).toLocaleString('es-AR');
   document.getElementById('cbuMod').textContent=CFG.CBU;
-  document.getElementById('resItems').innerHTML=carrito.map(function(i){return '<div class="res-line"><span>'+i.n.substring(0,28)+'... x'+i.qty+'</span><span>$'+(i.pF*i.qty).toLocaleString('es-AR')+'</span></div>';}).join('');
+  document.getElementById('resItems').innerHTML=carrito.map(function(i){return '<div class="res-line"><span>'+escHtml(i.n.substring(0,28))+'... x'+i.qty+'</span><span>$'+(i.pF*i.qty).toLocaleString('es-AR')+'</span></div>';}).join('');
   document.getElementById('resTot').textContent='$'+Math.round(tot).toLocaleString('es-AR');
+  // Mostrar QR Mercado Pago si está configurado
+  var qrBlock = document.getElementById('qrBlock');
+  var pagoGrid = document.getElementById('pagoOpciones');
+  if(CFG.QR_MP){
+    document.getElementById('qrImg').src = CFG.QR_MP;
+    qrBlock.style.display = 'block';
+  } else {
+    qrBlock.style.display = 'none';
+    pagoGrid.style.gridTemplateColumns = '1fr';
+  }
 }
 
 function cerrarModal(){document.getElementById('modalOv').classList.remove('visible');}
@@ -1878,6 +1903,29 @@ function enviarPed(){
     confImg.style.display = 'none';
     confComp.style.display = 'block';
   }
+
+  // ===== AUTO-REGISTRAR PEDIDO EN PANEL ADMIN (localStorage compartido) =====
+  try {
+    var pedidoAdmin = {
+      id: 'ped'+Date.now(),
+      fecha: new Date().toLocaleString('es-AR'),
+      nombre: n,
+      wsp: t,
+      producto: carrito.map(function(i){return i.n+' x'+i.qty;}).join(' / '),
+      items: emailItems,
+      direccion: d,
+      ciudad: ci+(cp?' (CP '+cp+')':''),
+      obs: ob,
+      precioProducto: Math.round(tot),
+      tipoFlete: 'a_confirmar',
+      costoFlete: 0,
+      estado: 'pendiente'
+    };
+    var pedidosGuardados = JSON.parse(localStorage.getItem('ferreteria_pedidos')||'[]');
+    pedidosGuardados.unshift(pedidoAdmin);
+    if(pedidosGuardados.length > 300) pedidosGuardados = pedidosGuardados.slice(0,300);
+    localStorage.setItem('ferreteria_pedidos', JSON.stringify(pedidosGuardados));
+  } catch(e){}
 
   // ===== ABRIR WHATSAPP DEL ADMIN =====
   window.open('https://wa.me/'+CFG.WSP+'?text='+encodeURIComponent(msg),'_blank');
